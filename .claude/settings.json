@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run*)",
+      "Bash(which ebook-convert)",
+      "Bash(which exiftool)"
+    ]
+  }
+}
