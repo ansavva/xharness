@@ -24,10 +24,14 @@ xharness/
 │       │       ├── cache.py       — SQLite helpers (~/.photo-migrate/photos.db)
 │       │       ├── takeout_scanner.py
 │       │       └── icloud_scanner.py
-│       └── kindle/
+│       ├── kindle/
+│       │   ├── SKILL.md
+│       │   └── scripts/
+│       │       └── kindle.py
+│       └── nytimes/
 │           ├── SKILL.md
 │           └── scripts/
-│               └── kindle.py
+│               └── nytimes.py     — briefing, top, search, popular
 └── CLAUDE.md
 ```
 
@@ -45,6 +49,9 @@ External tools required by some skills:
 - **Calibre CLI** (`ebook-convert`) — https://calibre-ebook.com — required for `kindle`
 - **exiftool** — `brew install exiftool` — required for future photo metadata embedding
 
+API keys required by some skills:
+- **NYT_API_KEY** — https://developer.nytimes.com/ — required for `nytimes` (free tier available)
+
 ---
 
 ## Available skills
@@ -54,6 +61,7 @@ External tools required by some skills:
 | `qr`      | Generate a QR code PNG from a URL                        |
 | `photos`  | Scan Google Takeout or iCloud Photos library into SQLite |
 | `kindle`  | Prepare a PDF for Kindle (clean → EPUB → Previewer)      |
+| `nytimes` | Morning briefing, top stories, article search, most popular (requires `NYT_API_KEY`) |
 
 ---
 
@@ -75,6 +83,7 @@ use and reuses it on subsequent runs:
 uv run .claude/skills/qr/scripts/generate.py "https://example.com" -o /tmp/qr.png
 uv run .claude/skills/photos/scripts/scan.py scan-takeout /path/to/takeout
 uv run .claude/skills/kindle/scripts/kindle.py /path/to/book.pdf
+uv run .claude/skills/nytimes/scripts/nytimes.py briefing
 ```
 
 For multi-file skills (like `photos`), only the entry script needs the
