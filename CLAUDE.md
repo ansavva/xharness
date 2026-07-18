@@ -24,10 +24,14 @@ xharness/
 │       │       ├── cache.py       — SQLite helpers (~/.photo-migrate/photos.db)
 │       │       ├── takeout_scanner.py
 │       │       └── icloud_scanner.py
-│       └── kindle/
+│       ├── kindle/
+│       │   ├── SKILL.md
+│       │   └── scripts/
+│       │       └── kindle.py
+│       └── wordgen/
 │           ├── SKILL.md
 │           └── scripts/
-│               └── kindle.py
+│               └── wordgen.py
 └── CLAUDE.md
 ```
 
@@ -54,6 +58,7 @@ External tools required by some skills:
 | `qr`      | Generate a QR code PNG from a URL                        |
 | `photos`  | Scan Google Takeout or iCloud Photos library into SQLite |
 | `kindle`  | Prepare a PDF for Kindle (clean → EPUB → Previewer)      |
+| `wordgen` | Generate pronounceable pseudowords that sound real but aren't |
 
 ---
 
