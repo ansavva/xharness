@@ -58,7 +58,7 @@ External tools required by some skills:
 | `qr`      | Generate a QR code PNG from a URL                        |
 | `photos`  | Scan Google Takeout or iCloud Photos library into SQLite |
 | `kindle`  | Prepare a PDF for Kindle (clean → EPUB → Previewer)      |
-| `wordgen` | Generate pronounceable pseudowords that sound real but aren't |
+| `wordgen` | Generate pronounceable pseudowords that sound real but aren't (styles + naming-brief constraints) |
 
 ---
 
