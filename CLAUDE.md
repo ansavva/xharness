@@ -32,6 +32,8 @@ xharness/
 │           ├── SKILL.md
 │           └── scripts/
 │               └── wordgen.py
+├── scripts/
+│   └── dev-setup.sh               — brew bootstrap (macOS + Linux)
 └── CLAUDE.md
 ```
 
@@ -39,15 +41,26 @@ xharness/
 
 ## One-time setup
 
+Run the bootstrap script — it installs everything via Homebrew on both macOS
+and Linux, and is idempotent (safe to re-run):
+
 ```bash
-brew install uv
+./scripts/dev-setup.sh            # install everything missing
+./scripts/dev-setup.sh --check    # report status only, install nothing
 ```
 
-That's it — `uv` handles Python versions and dependencies automatically per script.
+It installs:
+- **uv** — core; every skill runs its Python via `uv run` (uv provisions Python
+  and per-script deps automatically, so nothing else Python-related is needed)
+- **exiftool** — for the `photos` skill (metadata read/embed)
+- **Calibre** (`ebook-convert`) — for the `kindle` skill; a Homebrew cask on
+  macOS, installed via apt on Linux (Homebrew has no Linux calibre formula)
 
-External tools required by some skills:
-- **Calibre CLI** (`ebook-convert`) — https://calibre-ebook.com — required for `kindle`
-- **exiftool** — `brew install exiftool` — required for future photo metadata embedding
+Manual, not scripted: **Kindle Previewer 3** (macOS/Windows only) for the final
+`kindle` step — https://www.amazon.com/Kindle-Previewer/b?node=21381691011
+
+Prefer to do it by hand? The minimum is `brew install uv`; `uv` handles Python
+versions and dependencies automatically per script.
 
 ---
 
