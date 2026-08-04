@@ -1,6 +1,6 @@
 ---
 name: s3
-description: Read from and write to the xharness-assets S3 bucket via the AWS CLI/boto3 — list a prefix, upload local files into the media tree, download files to disk, and mint short-lived presigned HTTPS URLs (how images/videos reach Replicate). The canonical asset store for the seedance-video / fred video workflow (replaced Google Drive). Use when a skill or task needs to store, fetch, list, or hand out large media assets (reference images, generated videos) without inlining bytes into the agent context.
+description: Read from and write to the xharness-assets S3 bucket via the AWS CLI/boto3 — list a prefix, upload local files into the media tree, download files to disk, and mint short-lived presigned HTTPS URLs (how images/videos reach Replicate). The canonical asset store for the studio-* video workflow (replaced Google Drive). Use when a skill or task needs to store, fetch, list, or hand out large media assets (reference images, generated videos) without inlining bytes into the agent context.
 ---
 
 # S3 skill
@@ -8,7 +8,7 @@ description: Read from and write to the xharness-assets S3 bucket via the AWS CL
 The asset layer for xharness. Files move **disk ↔ S3 directly** (never
 base64-inlined into the agent context), so it handles full-resolution images and
 multi-MB videos cheaply. It replaced the Google Drive layer for the
-`seedance-video` / `fred` workflow.
+`studio-*` workflow.
 
 Everything lives in one bucket, **`xharness-assets`**, under a single **`media/`**
 key prefix. Paths passed to these scripts are relative *under* `media/`, e.g.

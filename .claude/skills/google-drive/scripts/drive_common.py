@@ -5,7 +5,7 @@ A general Drive API layer (not tied to any one skill): the `drive_auth.py`,
 `drive_upload.py`, and `drive_download.py` entry scripts use it to move file
 bytes disk<->Drive **directly**, so nothing is base64-inlined into the agent
 context (the way the Drive MCP would). A credential comes from `.env`. Other
-skills (e.g. seedance-video / fred, which store reference images and generated
+skills (e.g. the (now S3-based) video, which store reference images and generated
 videos in Drive rather than git) call these scripts by path.
 
 Authentication (resolved in this order):

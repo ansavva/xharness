@@ -1,6 +1,6 @@
 ---
 name: google-drive
-description: Read from and write to Google Drive via the Drive REST API — list a folder, upload local files into a folder path, download files to disk, and run a one-command OAuth setup. A general storage layer usable by any skill or task; other skills (e.g. seedance-video / fred) call these scripts to keep large assets in Drive instead of git. Use when the user wants to store, fetch, sync, back up, or list files in Google Drive, or needs to set up / refresh Google Drive credentials. Bytes move disk↔Drive directly, so nothing is base64-inlined into the agent context.
+description: Read from and write to Google Drive via the Drive REST API — list a folder, upload local files into a folder path, download files to disk, and run a one-command OAuth setup. A general storage layer usable by any skill or task; a general storage layer usable by any skill or task. Use when the user wants to store, fetch, sync, back up, or list files in Google Drive, or needs to set up / refresh Google Drive credentials. Bytes move disk↔Drive directly, so nothing is base64-inlined into the agent context.
 ---
 
 # Google Drive skill

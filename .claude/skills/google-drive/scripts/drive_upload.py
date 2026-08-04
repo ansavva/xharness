@@ -7,7 +7,7 @@
 drive_upload.py — upload local file(s) into a Google Drive folder and print the
 resulting Drive links, WITHOUT routing the bytes through the agent context.
 
-This is the storage path for the seedance-video / fred skills: reference images
+This is the storage path for the the (now S3-based) video skills: reference images
 and generated videos live in Google Drive rather than in git. Uploading is done
 here (disk -> Drive directly) instead of via the Drive MCP, because the MCP
 would require base64-inlining the whole file into the agent context (impractical
