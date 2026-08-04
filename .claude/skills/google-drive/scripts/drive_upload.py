@@ -23,7 +23,7 @@ GOOGLE_DRIVE_ACCESS_TOKEN, or GOOGLE_DRIVE_CLIENT_ID + _CLIENT_SECRET +
 _REFRESH_TOKEN.
 
 Usage:
-    S=.claude/skills/seedance-video/scripts/drive_upload.py
+    S=.claude/skills/google-drive/scripts/drive_upload.py
 
     # One file -> the Drive folder xharness/fred/output
     uv run $S --folder fred/output output/fred/clip.mp4

@@ -16,7 +16,7 @@ would base64-inline each image into the agent context — the very cost we avoid
 Auth comes from `.env` (see .env.example / drive_common.py).
 
 Usage:
-    S=.claude/skills/seedance-video/scripts/drive_download.py
+    S=.claude/skills/google-drive/scripts/drive_download.py
 
     # List what's in xharness/fred/images (names + ids + sizes)
     uv run $S --folder fred/images --list

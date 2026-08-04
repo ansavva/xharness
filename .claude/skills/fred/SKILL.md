@@ -73,7 +73,7 @@ the originals archive **and** the curated reference set; renames everything to
    the whole numbered set — no per-scene selection:
    ```bash
    # a) download all of fred/reference from Drive to a temp dir (bytes stay on disk)
-   uv run .claude/skills/seedance-video/scripts/drive_download.py \
+   uv run .claude/skills/google-drive/scripts/drive_download.py \
      --folder fred/reference --all --dest /tmp/fred-refs
    # b) upload them to Replicate -> full-res HTTP URLs (only short URLs enter context)
    uv run .claude/skills/seedance-video/scripts/upload_to_replicate.py \

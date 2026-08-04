@@ -1,12 +1,12 @@
 """
-drive_common.py — shared Google Drive helpers for the seedance-video skill.
+drive_common.py — shared Google Drive helpers for the `google-drive` skill.
 
-Storage model for this repo: reference images and generated videos live in
-Google Drive (not in git). These helpers give the `drive_upload.py` /
-`drive_download.py` entry scripts a scriptable path to Drive that mirrors the
-`upload_to_replicate.py` pattern — a credential comes from `.env`, and file
-bytes move disk<->Drive **directly**, so nothing is base64-inlined into the
-agent context (the way the Drive MCP would).
+A general Drive API layer (not tied to any one skill): the `drive_auth.py`,
+`drive_upload.py`, and `drive_download.py` entry scripts use it to move file
+bytes disk<->Drive **directly**, so nothing is base64-inlined into the agent
+context (the way the Drive MCP would). A credential comes from `.env`. Other
+skills (e.g. seedance-video / fred, which store reference images and generated
+videos in Drive rather than git) call these scripts by path.
 
 Authentication (resolved in this order):
   1. GOOGLE_DRIVE_ACCESS_TOKEN — a ready OAuth access token (handy for quick

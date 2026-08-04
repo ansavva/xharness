@@ -49,7 +49,7 @@ done
 ORIG_REF="${FRED_ORIG_REF:-6404638b606cc7e2685dc2057016c2d99c55e8f5}"
 ORIG_PATH=".claude/skills/fred/images"
 
-UPLOAD=".claude/skills/seedance-video/scripts/drive_upload.py"
+UPLOAD=".claude/skills/google-drive/scripts/drive_upload.py"
 
 # Curated reference set: output index -> original filename. The order defines the
 # [Image1]..[ImageN] slots the fred skill cites (fred_1 -> [Image1], ...).

@@ -75,8 +75,8 @@ mkdir -p output/fred
 NAME="$(date +%Y-%m-%d_%H-%M-%S)_<slug>.mp4"
 curl -sL "<output_url>" -o "output/fred/$NAME"
 
-# 2) upload the staged file to Drive (folder is created if missing)
-uv run .claude/skills/seedance-video/scripts/drive_upload.py \
+# 2) upload the staged file to Drive (folder is created if missing) — google-drive skill
+uv run .claude/skills/google-drive/scripts/drive_upload.py \
   --folder fred/output "output/fred/$NAME"
 ```
 
@@ -124,12 +124,14 @@ Replicate accepts a file input only in one of two forms:
   **≤ 256 KB**. Nothing is hosted and Replicate does not store it.
 
 Since references (and outputs) are stored in Google Drive, the reference
-pipeline is: **Drive → local temp → Replicate URL**. Four helper scripts live
+pipeline is: **Drive → local temp → Replicate URL**. Drive access is provided by
+the separate **`google-drive`** skill (`drive_download.py` / `drive_upload.py`);
+the Replicate-side helpers (`img2datauri.py`, `upload_to_replicate.py`) live
 beside this skill:
 
 ```bash
-# 0) Pull a character's fixed reference set out of Drive to a local temp dir
-uv run .claude/skills/seedance-video/scripts/drive_download.py \
+# 0) Pull a character's fixed reference set out of Drive to a local temp dir (google-drive skill)
+uv run .claude/skills/google-drive/scripts/drive_download.py \
   --folder fred/reference --all --dest /tmp/fred-refs
 
 # 1) Local image -> HTTP URL via Replicate Files API (needs REPLICATE_API_TOKEN; see .env)
@@ -138,15 +140,16 @@ uv run .claude/skills/seedance-video/scripts/upload_to_replicate.py /tmp/fred-re
 # 1b) No token? Local image -> small data URL (downscale/recompress to fit --max-bytes)
 uv run .claude/skills/seedance-video/scripts/img2datauri.py <img>... --max-bytes 12000 --json > refs.json
 
-# 2) After rendering: push the finished MP4 up to Drive
-uv run .claude/skills/seedance-video/scripts/drive_upload.py --folder fred/output output/fred/<name>.mp4
+# 2) After rendering: push the finished MP4 up to Drive (google-drive skill)
+uv run .claude/skills/google-drive/scripts/drive_upload.py --folder fred/output output/fred/<name>.mp4
 ```
 
 `img2datauri.py` flags: `--json`, `--out FILE`, `--max-bytes N` (default 262144),
 `--format jpeg|webp|png`, `--save-dir DIR`.
-`drive_download.py` / `drive_upload.py` take `--folder <path-under-root>` and a
-Google Drive credential from `.env` (see `.env.example`); they move bytes
-disk↔Drive directly, so nothing is base64-inlined into the agent context.
+The Drive scripts (`drive_download.py` / `drive_upload.py`) take
+`--folder <path-under-root>` and a Google Drive credential from `.env`; they move
+bytes disk↔Drive directly, so nothing is base64-inlined into the agent context.
+See the **`google-drive`** skill for details and OAuth setup.
 
 ### Full-res references vs the small-data-URL workaround (important)
 
