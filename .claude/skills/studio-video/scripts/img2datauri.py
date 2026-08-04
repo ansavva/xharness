@@ -23,7 +23,7 @@ API), so a successful result is guaranteed to fit.
 
 Usage (via uv — no venv or manual install needed):
 
-    S=.claude/skills/seedance-video/scripts/img2datauri.py
+    S=.claude/skills/studio-video/scripts/img2datauri.py
 
     # Print one data URL to stdout
     uv run $S /tmp/fred-refs/fred_1.webp

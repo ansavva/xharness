@@ -7,7 +7,7 @@
 drive_download.py — fetch file(s) from a Google Drive folder to local disk,
 WITHOUT routing the bytes through the agent context.
 
-This is the read side of Drive-backed storage for the seedance-video / fred
+This is the read side of Drive-backed storage for the the (now S3-based) video
 skills. Reference images live in Drive; at generation time this script pulls the
 chosen references to a local temp dir, from where `upload_to_replicate.py` turns
 them into HTTP URLs for the Seedance prediction. (Downloading via the Drive MCP

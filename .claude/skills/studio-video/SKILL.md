@@ -1,19 +1,26 @@
 ---
-name: seedance-video
-description: Generate videos on demand with ByteDance Seedance 2.0 via the Replicate MCP — the engine for any text-to-video / image-to-video / character-video request. Use whenever the user wants to create, generate, or render a video, clip, animation, or motion piece (with optional native audio, first/last-frame images, or reference images/videos/audio). Covers the model input schema, the create-then-poll flow, output naming, and how local images must be passed (base64 data URLs vs HTTP URLs). Character videos additionally load that character's own skill (e.g. `fred`) for on-model references.
+name: studio-video
+description: Generate videos on demand with ByteDance Seedance 2.0 via the Replicate MCP — the engine for any text-to-video / image-to-video / character-video request. Use whenever the user wants to create, generate, or render a video, clip, animation, or motion piece (with optional native audio, first/last-frame images, or reference images/videos/audio). Covers the model input schema, the create-then-poll flow, output naming, and how images reach Replicate (presigned S3 URLs). Part of the studio-* family: pair with studio-prompt to author the prompt and studio-character for on-model character videos.
 ---
 
-# Seedance 2.0 video generation
+# studio-video — Seedance 2.0 video generation
 
-Generate videos by creating a Replicate prediction against
-**`bytedance/seedance-2.0`** (<https://replicate.com/bytedance/seedance-2.0>)
-through the **Replicate MCP server**, polling it, and saving the output MP4.
-There is no build step — the "work" is the MCP call, the poll, and the download.
+The rendering engine of the **`studio-*`** family. Generate videos by creating a
+Replicate prediction against **`bytedance/seedance-2.0`**
+(<https://replicate.com/bytedance/seedance-2.0>) through the **Replicate MCP
+server**, polling it, and saving the output MP4 to S3. There is no build step —
+the "work" is the MCP call, the poll, and the download.
 
-> **Character videos:** if the request names a known character (e.g. Fred),
-> FIRST load that character's skill (`fred`) — it supplies the profile and the
-> reference images this engine requires. Never generate a character from a text
-> prompt alone (see "Reference images are MANDATORY" below).
+The family:
+- **`studio-prompt`** — author the prompt as structured JSON (camera / subject /
+  action / scene / lighting / style / audio, multi-shot timelines). Its `input`
+  object drops straight into the call below. Use it for tight or repeatable
+  control; plain prose is fine for a quick one-off.
+- **`studio-character`** — for a video of a known/recurring character (e.g.
+  Fred): it supplies the character's bible and the reference images this engine
+  requires. **FIRST load `studio-character`** — never generate a character from a
+  text prompt alone (see "Reference images are MANDATORY" below).
+- **`s3`** — the `xharness-assets` asset store references and outputs live in.
 
 ## The model: `bytedance/seedance-2.0`
 
@@ -25,7 +32,7 @@ video file URL.
 
 | Field | Type | Default | Notes |
 |---|---|---|---|
-| `prompt` | string (**required**) | — | Max 4000 chars; keep under ~600 English words. Put **spoken dialogue in double quotes** to drive audio. |
+| `prompt` | string (**required**) | — | Max 4000 chars; keep under ~600 English words. Put **spoken dialogue in double quotes** to drive audio. For tight camera/subject/scene control, a multi-shot timeline, or reusable templates, author it as structured JSON via the **`studio-prompt`** skill and pass its `input` here. |
 | `image` | uri | null | First-frame image for image-to-video. **Cannot** be combined with `reference_images`. |
 | `last_frame_image` | uri | null | Last-frame image. Only works when `image` is also set. Not combinable with reference images. |
 | `reference_images` | uri[] (≤ 9) | `[]` | For **character consistency**, style, and scene composition. Reference them in the prompt as `[Image1]`, `[Image2]`, … **Cannot** be combined with `image`/`last_frame_image`. |
@@ -100,17 +107,16 @@ Minimal example input:
 
 **Rule (non-negotiable): never generate a video of a known character without
 passing that character's reference images in `reference_images`.** A text prompt
-alone drifts off-model — a character's profile + images exist to be *wired into
-the request*, not merely read. If you are about to call the model with only a
-`prompt` for a character, STOP and add `reference_images` first.
+alone drifts off-model. If you are about to call the model with only a `prompt`
+for a character, STOP and load **`studio-character`** first.
 
 - Seedance 2.0 accepts up to **9** `reference_images`. Reference them in the
   prompt as `[Image1]`, `[Image2]`, …
 - Each character keeps a **fixed, numbered reference set in S3** (at
   `media/<character>/reference/`), used in full on every generation so identity
-  stays locked without re-picking. Presign it with `s3_presign.py --folder
-  <character>/reference` to get ordered HTTPS URLs (below). The character's own
-  skill (e.g. `fred`) documents its set.
+  stays locked without re-picking. **`studio-character`** hands you ordered
+  presigned URLs for it (`character.py refs <name> --presign`); under the hood
+  that is `s3_presign.py --folder <character>/reference` (below).
 - `reference_images` **cannot** be combined with `image` / `last_frame_image`.
 
 ### How image files reach Replicate (presigned S3 URLs)
@@ -122,7 +128,9 @@ a short URL (never the bytes) enters the agent context. No `REPLICATE_API_TOKEN`
 is needed for references.
 
 ```bash
-# References: presign a character's fixed set, in fred_1..fred_N order, as JSON (s3 skill)
+# References for a character — ordered presigned URLs (via studio-character)
+uv run .claude/skills/studio-character/scripts/character.py refs fred --presign --json > refs.json
+# equivalently, straight from the s3 skill:
 uv run .claude/skills/s3/scripts/s3_presign.py --folder fred/reference --json > refs.json
 # -> [{ "key": "media/fred/reference/fred_1.webp", "url": "https://..." }, ...]
 # Pass the .url values as reference_images; fred_1 -> [Image1], fred_2 -> [Image2], ...
@@ -136,10 +144,10 @@ beside this skill):
 
 ```bash
 # Local image -> HTTP URL via Replicate Files API (needs REPLICATE_API_TOKEN; see .env)
-uv run .claude/skills/seedance-video/scripts/upload_to_replicate.py <img>... --json > refs.json
+uv run .claude/skills/studio-video/scripts/upload_to_replicate.py <img>... --json > refs.json
 
 # No token? Local image -> small inline data URL (downscale/recompress to fit --max-bytes)
-uv run .claude/skills/seedance-video/scripts/img2datauri.py <img>... --max-bytes 12000 --json > refs.json
+uv run .claude/skills/studio-video/scripts/img2datauri.py <img>... --max-bytes 12000 --json > refs.json
 ```
 
 `img2datauri.py` flags: `--json`, `--out FILE`, `--max-bytes N` (default 262144),
@@ -155,8 +163,8 @@ images at zero context cost (only the short URL enters the agent context). Order
 of preference:
 
 - **PREFERRED — presigned S3 URLs (full resolution).** References already live in
-  S3, so `s3_presign.py` hands Replicate full-size images via signed URLs. No
-  token, no base64. Use this for any character reference set.
+  S3, so a presign hands Replicate full-size images via signed URLs. No token, no
+  base64. Use this for any character reference set.
 - **Local image, have a token — Replicate Files API.** For an ad-hoc local image
   not in S3, `upload_to_replicate.py` (needs `REPLICATE_API_TOKEN`) POSTs it and
   returns a served URL — again full size, only a short URL in context.
@@ -180,23 +188,12 @@ Always pass a `jq_filter` to these tools to keep responses small (e.g.
 
 ## Characters
 
-Each character owns its own skill under `.claude/skills/<name>/`, self-contained
-with a `profile.md` (the character bible). Its **reference images live in S3**
-(`media/<name>/reference/`), not in git. That skill reads the profile, presigns
-its fixed reference set into Replicate URLs, and composes the prompt so the
-output stays on-model. This engine skill is character-agnostic.
+Characters are **data, not skills** — a single **`studio-character`** skill
+manages them all, and each one is an S3 record (`media/<name>/` with a
+`profile.md` bible, a numbered `reference/` set, and `output/`). To generate an
+on-model character video, load **`studio-character`**: it reads the bible and
+hands you the fixed reference set as ordered presigned URLs; this engine skill is
+character-agnostic.
 
-- **Fred** — recurring illustrated character (the "Gays of Hudson" series).
-  Skill: `.claude/skills/fred/`. Reference set: S3 `media/fred/reference`.
-
-### Adding a new character
-
-1. `.claude/skills/<name>/SKILL.md` — copy the Fred skill as a template and
-   rewrite the prompt template + guardrails for the new character.
-2. `.claude/skills/<name>/profile.md` — the character bible (mirror Fred's
-   sections: at-a-glance, face, body, wardrobe, art style, voice, checklist).
-3. Upload the character's images to S3 with `<name>/scripts/sync_reference_set.sh`
-   (mirror Fred's): the full **originals** archive to `media/<name>/originals/`
-   and the curated, numbered **reference** set to `media/<name>/reference/`, kept
-   separate and named `<name>_<index>.webp`.
-4. Videos save to S3 `media/<name>/output/`. No change to this engine skill is needed.
+- **Fred** — the recurring illustrated character (the "Gays of Hudson" series)
+  and the worked example. Record: S3 `media/fred/`. See `studio-character`.

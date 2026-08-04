@@ -19,10 +19,10 @@ Token resolution order:
 
 Usage:
     # One image -> served URL on stdout
-    uv run .claude/skills/seedance-video/scripts/upload_to_replicate.py img.webp
+    uv run .claude/skills/studio-video/scripts/upload_to_replicate.py img.webp
 
     # Several -> JSON map {path: url}, ready to drop into reference_images
-    uv run .claude/skills/seedance-video/scripts/upload_to_replicate.py a.webp b.webp --json > refs.json
+    uv run .claude/skills/studio-video/scripts/upload_to_replicate.py a.webp b.webp --json > refs.json
 
 Pass the returned https URL(s) directly as `reference_images` or `image`.
 Uploaded files expire after ~24h by default — upload right before generating.

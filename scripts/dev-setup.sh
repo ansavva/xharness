@@ -71,8 +71,10 @@ prewarm() {
 
 prewarm qr              "$REPO_ROOT/.claude/skills/qr/scripts/generate.py"
 prewarm kindle          "$REPO_ROOT/.claude/skills/kindle/scripts/kindle.py"
-prewarm img2datauri     "$REPO_ROOT/.claude/skills/seedance-video/scripts/img2datauri.py"
-prewarm replicate-upload "$REPO_ROOT/.claude/skills/seedance-video/scripts/upload_to_replicate.py"
+prewarm img2datauri     "$REPO_ROOT/.claude/skills/studio-video/scripts/img2datauri.py"
+prewarm replicate-upload "$REPO_ROOT/.claude/skills/studio-video/scripts/upload_to_replicate.py"
+prewarm build-prompt    "$REPO_ROOT/.claude/skills/studio-prompt/scripts/build_prompt.py"
+prewarm character       "$REPO_ROOT/.claude/skills/studio-character/scripts/character.py"
 prewarm drive-auth      "$REPO_ROOT/.claude/skills/google-drive/scripts/drive_auth.py"
 prewarm drive-upload    "$REPO_ROOT/.claude/skills/google-drive/scripts/drive_upload.py"
 prewarm drive-download  "$REPO_ROOT/.claude/skills/google-drive/scripts/drive_download.py"
@@ -93,6 +95,6 @@ check_optional() {
 
 check_optional ebook-convert "needed by the 'kindle' skill (install Calibre: https://calibre-ebook.com)"
 check_optional exiftool      "needed by 'photos' metadata embedding (brew install exiftool)"
-check_optional ffmpeg        "used by the 'seedance-video' skill to verify rendered frames (brew install ffmpeg)"
+check_optional ffmpeg        "used by the 'studio-video' skill to verify rendered frames (brew install ffmpeg)"
 
 log "done."

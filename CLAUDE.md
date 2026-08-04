@@ -38,6 +38,17 @@ xharness/
 │       │   ├── SKILL.md
 │       │   └── scripts/
 │       │       └── search.py      — keyword article search
+│       ├── studio-video/          — [studio-*] Seedance 2.0 render engine (Replicate MCP)
+│       │   ├── SKILL.md
+│       │   └── scripts/           — upload_to_replicate.py / img2datauri.py (local-image fallbacks)
+│       ├── studio-prompt/         — [studio-*] author Seedance prompts as JSON
+│       │   ├── SKILL.md
+│       │   └── scripts/build_prompt.py   — assemble + validate; split technical → API params
+│       ├── studio-character/      — [studio-*] character CRUD; profiles + refs in S3 (media/<name>/)
+│       │   ├── SKILL.md
+│       │   ├── templates/profile.md      — blank character bible
+│       │   ├── examples/fred/            — worked example (bible + ref-set doc)
+│       │   └── scripts/character.py      — list/create/show/set-profile/add-refs/refs (uses s3)
 │       └── s3/
 │           ├── SKILL.md
 │           └── scripts/
@@ -79,11 +90,11 @@ External tools required by some skills (installed separately, per platform):
 
 API keys required by some skills:
 - **NYT_API_KEY** — https://developer.nytimes.com/ — required for `nytimes-briefing` and `nytimes-search` (free tier available)
-- **REPLICATE_API_TOKEN** — https://replicate.com/account/api-tokens — optional for `seedance-video`; only needed to upload full-resolution *local* reference images (S3-hosted references use presigned URLs and need no token). Put keys in a `.env` file at the repo root (copy `.env.example`; `.env` is git-ignored).
+- **REPLICATE_API_TOKEN** — https://replicate.com/account/api-tokens — optional for `studio-video`; only needed to upload full-resolution *local* reference images (S3-hosted references use presigned URLs and need no token). Put keys in a `.env` file at the repo root (copy `.env.example`; `.env` is git-ignored).
 
 Asset storage (the `s3` skill) uses your **AWS login**, not an API key. The
-`seedance-video` / `fred` workflow stores character **reference images and
-generated videos in S3** (bucket `xharness-assets`, under `media/`), not in git —
+`studio-*` workflow stores character **profiles, reference images, and generated
+videos in S3** (bucket `xharness-assets`, under `media/<name>/`), not in git —
 provisioned by Terraform in [`infra/`](infra/README.md). The `google-drive` skill
 remains in the repo but is **legacy** (the workflow moved off Drive to S3).
 
@@ -98,8 +109,9 @@ remains in the repo but is **legacy** (the workflow moved off Drive to S3).
 | `kindle`  | Prepare a PDF for Kindle (clean → EPUB → Previewer)      |
 | `nytimes-briefing` | Morning briefing, top stories by section, most popular (requires `NYT_API_KEY`) |
 | `nytimes-search`   | Keyword article search with date filters and sort order (requires `NYT_API_KEY`) |
-| `seedance-video`   | Generate videos with ByteDance Seedance 2.0 via the Replicate MCP (text/image/character → MP4) |
-| `fred`             | On-model videos of the "Fred" character; runs on `seedance-video` |
+| `studio-video`     | **[studio-*]** Generate videos with ByteDance Seedance 2.0 via the Replicate MCP (text/image/character → MP4); the render engine |
+| `studio-prompt`    | **[studio-*]** Author Seedance 2.0 prompts as structured JSON (validates rules, splits technical fields to API params); feeds `studio-video` |
+| `studio-character` | **[studio-*]** Manage on-model characters (create/update/list/load) whose bible + reference images live in S3 (`media/<name>/`); characters are data, not skills (Fred is the worked example) |
 | `s3`               | Read/write the `xharness-assets` S3 bucket (list, upload, download, presign) — the video workflow's asset store |
 | `google-drive`     | *Legacy* — Read/write Google Drive via the REST API (superseded by `s3` for the video workflow) |
 
