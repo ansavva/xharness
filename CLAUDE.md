@@ -66,6 +66,8 @@ External tools required by some skills (installed separately, per platform):
 
 API keys required by some skills:
 - **NYT_API_KEY** — https://developer.nytimes.com/ — required for `nytimes-briefing` and `nytimes-search` (free tier available)
+- **REPLICATE_API_TOKEN** — https://replicate.com/account/api-tokens — optional for `seedance-video`; enables uploading full-resolution reference images. Put keys in a `.env` file at the repo root (copy `.env.example`; `.env` is git-ignored).
+- **Google Drive OAuth** (`GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET` / `GOOGLE_DRIVE_REFRESH_TOKEN`) — used by the `google-drive` skill (a general Drive layer). `seedance-video` / `fred` build on it: character **reference images and generated videos live in Google Drive**, not in git. Run `google-drive`'s `drive_auth.py` for one-command setup; full steps are in `.env.example`.
 
 ---
 
@@ -78,6 +80,9 @@ API keys required by some skills:
 | `kindle`  | Prepare a PDF for Kindle (clean → EPUB → Previewer)      |
 | `nytimes-briefing` | Morning briefing, top stories by section, most popular (requires `NYT_API_KEY`) |
 | `nytimes-search`   | Keyword article search with date filters and sort order (requires `NYT_API_KEY`) |
+| `seedance-video`   | Generate videos with ByteDance Seedance 2.0 via the Replicate MCP (text/image/character → MP4) |
+| `fred`             | On-model videos of the "Fred" character; runs on `seedance-video` |
+| `google-drive`     | Read/write Google Drive via the REST API (list, upload, download, one-command OAuth) |
 
 ---
 
