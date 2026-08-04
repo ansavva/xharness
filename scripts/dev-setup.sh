@@ -69,8 +69,10 @@ prewarm() {
   fi
 }
 
-prewarm qr     "$REPO_ROOT/.claude/skills/qr/scripts/generate.py"
-prewarm kindle "$REPO_ROOT/.claude/skills/kindle/scripts/kindle.py"
+prewarm qr              "$REPO_ROOT/.claude/skills/qr/scripts/generate.py"
+prewarm kindle          "$REPO_ROOT/.claude/skills/kindle/scripts/kindle.py"
+prewarm img2datauri     "$REPO_ROOT/.claude/skills/seedance-video/scripts/img2datauri.py"
+prewarm replicate-upload "$REPO_ROOT/.claude/skills/seedance-video/scripts/upload_to_replicate.py"
 
 # ---------------------------------------------------------------------------
 # 3. Report optional external tools (never fatal — platform dependent).
@@ -88,5 +90,6 @@ check_optional() {
 
 check_optional ebook-convert "needed by the 'kindle' skill (install Calibre: https://calibre-ebook.com)"
 check_optional exiftool      "needed by 'photos' metadata embedding (brew install exiftool)"
+check_optional ffmpeg        "used by the 'seedance-video' skill to verify rendered frames (brew install ffmpeg)"
 
 log "done."
