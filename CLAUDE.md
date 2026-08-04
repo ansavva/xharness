@@ -26,10 +26,18 @@ xharness/
 │       │       ├── cache.py       — SQLite helpers (~/.photo-migrate/photos.db)
 │       │       ├── takeout_scanner.py
 │       │       └── icloud_scanner.py
-│       └── kindle/
+│       ├── kindle/
+│       │   ├── SKILL.md
+│       │   └── scripts/
+│       │       └── kindle.py
+│       ├── nytimes-briefing/
+│       │   ├── SKILL.md
+│       │   └── scripts/
+│       │       └── nytimes.py     — briefing, top, popular
+│       └── nytimes-search/
 │           ├── SKILL.md
 │           └── scripts/
-│               └── kindle.py
+│               └── search.py      — keyword article search
 ├── scripts/
 │   └── dev-setup.sh               — idempotent prerequisite installer
 └── CLAUDE.md
@@ -56,6 +64,9 @@ External tools required by some skills (installed separately, per platform):
 - **Calibre CLI** (`ebook-convert`) — https://calibre-ebook.com — required for `kindle`
 - **exiftool** — `brew install exiftool` — required for future photo metadata embedding
 
+API keys required by some skills:
+- **NYT_API_KEY** — https://developer.nytimes.com/ — required for `nytimes-briefing` and `nytimes-search` (free tier available)
+
 ---
 
 ## Available skills
@@ -65,6 +76,8 @@ External tools required by some skills (installed separately, per platform):
 | `qr`      | Generate a QR code PNG from a URL                        |
 | `photos`  | Scan Google Takeout or iCloud Photos library into SQLite |
 | `kindle`  | Prepare a PDF for Kindle (clean → EPUB → Previewer)      |
+| `nytimes-briefing` | Morning briefing, top stories by section, most popular (requires `NYT_API_KEY`) |
+| `nytimes-search`   | Keyword article search with date filters and sort order (requires `NYT_API_KEY`) |
 
 ---
 
@@ -86,6 +99,8 @@ use and reuses it on subsequent runs:
 uv run .claude/skills/qr/scripts/generate.py "https://example.com" -o /tmp/qr.png
 uv run .claude/skills/photos/scripts/scan.py scan-takeout /path/to/takeout
 uv run .claude/skills/kindle/scripts/kindle.py /path/to/book.pdf
+uv run .claude/skills/nytimes-briefing/scripts/nytimes.py briefing
+uv run .claude/skills/nytimes-search/scripts/search.py "climate change"
 ```
 
 For multi-file skills (like `photos`), only the entry script needs the
