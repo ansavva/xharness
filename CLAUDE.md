@@ -34,10 +34,22 @@ xharness/
 │       │   ├── SKILL.md
 │       │   └── scripts/
 │       │       └── nytimes.py     — briefing, top, popular
-│       └── nytimes-search/
+│       ├── nytimes-search/
+│       │   ├── SKILL.md
+│       │   └── scripts/
+│       │       └── search.py      — keyword article search
+│       └── s3/
 │           ├── SKILL.md
 │           └── scripts/
-│               └── search.py      — keyword article search
+│               ├── s3_common.py   — auth (aws-CLI credential bridge) + helpers
+│               ├── s3_upload.py   — local file(s) → media/<folder>/
+│               ├── s3_download.py — list / download a media folder
+│               └── s3_presign.py  — objects → temporary HTTPS URLs (for Replicate)
+├── infra/                         — Terraform: the xharness-assets S3 bucket
+│   ├── main.tf variables.tf outputs.tf
+│   ├── apply.sh                   — init + apply against an AWS profile
+│   ├── README.md
+│   └── modules/media-bucket/      — reusable S3 asset-bucket module
 ├── scripts/
 │   └── dev-setup.sh               — idempotent prerequisite installer
 └── CLAUDE.md
@@ -63,11 +75,17 @@ sessions come up ready to use.
 External tools required by some skills (installed separately, per platform):
 - **Calibre CLI** (`ebook-convert`) — https://calibre-ebook.com — required for `kindle`
 - **exiftool** — `brew install exiftool` — required for future photo metadata embedding
+- **AWS CLI** (`aws`) — `brew install awscli` — required for the `s3` skill (asset store). Sign in with `aws login` (or `aws sso login` / `aws configure`) each session.
 
 API keys required by some skills:
 - **NYT_API_KEY** — https://developer.nytimes.com/ — required for `nytimes-briefing` and `nytimes-search` (free tier available)
-- **REPLICATE_API_TOKEN** — https://replicate.com/account/api-tokens — optional for `seedance-video`; enables uploading full-resolution reference images. Put keys in a `.env` file at the repo root (copy `.env.example`; `.env` is git-ignored).
-- **Google Drive OAuth** (`GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET` / `GOOGLE_DRIVE_REFRESH_TOKEN`) — used by the `google-drive` skill (a general Drive layer). `seedance-video` / `fred` build on it: character **reference images and generated videos live in Google Drive**, not in git. Run `google-drive`'s `drive_auth.py` for one-command setup; full steps are in `.env.example`.
+- **REPLICATE_API_TOKEN** — https://replicate.com/account/api-tokens — optional for `seedance-video`; only needed to upload full-resolution *local* reference images (S3-hosted references use presigned URLs and need no token). Put keys in a `.env` file at the repo root (copy `.env.example`; `.env` is git-ignored).
+
+Asset storage (the `s3` skill) uses your **AWS login**, not an API key. The
+`seedance-video` / `fred` workflow stores character **reference images and
+generated videos in S3** (bucket `xharness-assets`, under `media/`), not in git —
+provisioned by Terraform in [`infra/`](infra/README.md). The `google-drive` skill
+remains in the repo but is **legacy** (the workflow moved off Drive to S3).
 
 ---
 
@@ -82,7 +100,8 @@ API keys required by some skills:
 | `nytimes-search`   | Keyword article search with date filters and sort order (requires `NYT_API_KEY`) |
 | `seedance-video`   | Generate videos with ByteDance Seedance 2.0 via the Replicate MCP (text/image/character → MP4) |
 | `fred`             | On-model videos of the "Fred" character; runs on `seedance-video` |
-| `google-drive`     | Read/write Google Drive via the REST API (list, upload, download, one-command OAuth) |
+| `s3`               | Read/write the `xharness-assets` S3 bucket (list, upload, download, presign) — the video workflow's asset store |
+| `google-drive`     | *Legacy* — Read/write Google Drive via the REST API (superseded by `s3` for the video workflow) |
 
 ---
 
@@ -106,6 +125,7 @@ uv run .claude/skills/photos/scripts/scan.py scan-takeout /path/to/takeout
 uv run .claude/skills/kindle/scripts/kindle.py /path/to/book.pdf
 uv run .claude/skills/nytimes-briefing/scripts/nytimes.py briefing
 uv run .claude/skills/nytimes-search/scripts/search.py "climate change"
+uv run .claude/skills/s3/scripts/s3_presign.py --folder fred/reference --json
 ```
 
 For multi-file skills (like `photos`), only the entry script needs the

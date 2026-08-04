@@ -3,7 +3,10 @@
     "allow": [
       "Bash(uv run*)",
       "Bash(which ebook-convert)",
-      "Bash(which exiftool)"
+      "Bash(which exiftool)",
+      "Bash(aws sts get-caller-identity*)",
+      "Bash(aws s3 ls*)",
+      "Bash(aws configure export-credentials*)"
     ]
   },
   "hooks": {
