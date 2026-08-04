@@ -29,7 +29,8 @@ Allow, and the token is captured, exchanged, verified, and saved automatically.
 Options:
     --port N     Loopback port; must match the registered redirect URI (default 8765)
     --env PATH   Explicit .env to read creds from and write the refresh token to
-    --scope S    OAuth scope (default https://www.googleapis.com/auth/drive)
+    --scope S    OAuth scope (default .../auth/drive.file — non-sensitive, no
+                 verification warning; use .../auth/drive for full Drive access)
     --print      Also print the refresh token to stdout (default: masked only)
     --no-browser Don't try to open a browser; just print the URL
 """
@@ -47,7 +48,11 @@ import requests
 import drive_common as dc
 
 AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"
-DEFAULT_SCOPE = "https://www.googleapis.com/auth/drive"
+# drive.file is NON-sensitive: it grants access only to files/folders this app
+# creates — exactly what these scripts do — so Google shows no "unverified app"
+# warning (unlike the broad .../auth/drive scope). Override with --scope if you
+# genuinely need to read/manage files the app did not create.
+DEFAULT_SCOPE = "https://www.googleapis.com/auth/drive.file"
 
 
 def find_env_path(explicit: Path | None) -> Path:

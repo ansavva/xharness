@@ -36,6 +36,15 @@ verifies access. Re-run it whenever the token expires (OAuth *Testing*-mode
 refresh tokens lapse after 7 days — click "Publish app" on the consent screen to
 avoid that).
 
+**Scope / the "Google hasn't verified this app" screen:** `drive_auth.py`
+defaults to the **non-sensitive** `drive.file` scope (access only to files this
+app creates — all these scripts need), which shows **no** unverified-app
+warning. If you instead request the broad `.../auth/drive` scope on an unverified
+Testing app, Google shows that warning; since you're the developer using your own
+account, it's safe to continue via **Advanced → "Go to <app> (unsafe)"**. Prefer
+`drive.file` unless you must touch files the app didn't create (pass
+`--scope https://www.googleapis.com/auth/drive`).
+
 ## Scripts
 
 All are `uv` scripts (PEP 723; dependency `requests`) under
