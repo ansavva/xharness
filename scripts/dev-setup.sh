@@ -28,10 +28,17 @@ export PATH="$UV_BIN_DIR:$PATH"
 
 if command -v uv >/dev/null 2>&1; then
   log "uv already installed: $(uv --version)"
+elif command -v brew >/dev/null 2>&1; then
+  # Preferred path: Homebrew, matching the documented setup in CLAUDE.md.
+  log "installing uv via Homebrew..."
+  brew install uv
+  hash -r 2>/dev/null || true
+  log "uv installed: $(uv --version)"
 else
-  log "installing uv..."
-  # Official, self-contained installer. UV_NO_MODIFY_PATH keeps it from
-  # editing shell profiles — we manage PATH ourselves (below / via the hook).
+  # Fallback for environments without Homebrew (e.g. remote/web Linux
+  # sessions): the official, self-contained installer. UV_NO_MODIFY_PATH
+  # keeps it from editing shell profiles — we manage PATH ourselves.
+  log "Homebrew not found; installing uv via the official installer..."
   export UV_NO_MODIFY_PATH=1
   export INSTALLER_NO_MODIFY_PATH=1
   curl -LsSf https://astral.sh/uv/install.sh | sh
