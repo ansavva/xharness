@@ -26,20 +26,20 @@ call/poll details.
 - **Character bible:** [`profile.md`](profile.md) — read it before writing any
   prompt. It defines his face, mustache (non-negotiable), body, wardrobe, art
   style, voice, and a consistency checklist.
-- **Images (Google Drive, not git):** `<root>` defaults to `xharness`.
-  - **Reference set** — `<root>/fred/reference/` (`fred_1.webp … fred_9.webp`):
+- **Images (S3, not git):** bucket `xharness-assets`, prefix `media/`.
+  - **Reference set** — `media/fred/reference/` (`fred_1.webp … fred_9.webp`):
     the fixed, curated set used on **every** generation.
-  - **Originals archive** — `<root>/fred/originals/` (`fred_1.webp … fred_26.webp`):
+  - **Originals archive** — `media/fred/originals/` (`fred_1.webp … fred_26.webp`):
     all source illustrations, kept **separate** from the reference set (an archive
     to re-curate from; not used at generation time).
-  - **Renders** — `<root>/fred/output/` (also staged locally under `output/fred/`,
+  - **Renders** — `media/fred/output/` (also staged locally under `output/fred/`,
     git-ignored).
 
 ## The reference set
 
 Fred always generates from the **same nine reference images** so his identity
-stays locked without re-choosing references each run. They live in Drive at
-`fred/reference/`, named `fred_1`–`fred_9` (each `fred_N` → prompt slot `[ImageN]`):
+stays locked without re-choosing references each run. They live in S3 at
+`media/fred/reference/`, named `fred_1`–`fred_9` (each `fred_N` → prompt slot `[ImageN]`):
 
 | file | What it anchors |
 |---|---|
@@ -53,8 +53,8 @@ stays locked without re-choosing references each run. They live in Drive at
 | fred_8 | City, white button shirt + leather — clothed full body (alt) |
 | fred_9 | Shaving close-up — mustache detail |
 
-To (re)build and upload the Drive folders, run the one-time migration (uploads
-the originals archive **and** the curated reference set; renames everything to
+To (re)build and upload the S3 folders, run the one-time migration (uploads the
+originals archive **and** the curated reference set; renames everything to
 `fred_<index>.webp`):
 
 ```bash
@@ -62,38 +62,36 @@ the originals archive **and** the curated reference set; renames everything to
 .claude/skills/fred/scripts/sync_reference_set.sh --reference-only   # just the set
 ```
 
-(Requires a Google Drive credential in `.env` — see `.env.example`. Edit
+(Requires an AWS login — run `aws login` first; see the `s3` skill. Edit
 `REF_MAP` in that script to change which originals make up the reference set.)
 
 ## Workflow
 
 1. **Read [`profile.md`](profile.md)** (skim §7 Consistency Checklist + §2/§4/§5
    at minimum). Do not generate from memory.
-2. **Fetch the reference set from Drive and prep it for Replicate.** Always use
-   the whole numbered set — no per-scene selection:
+2. **Presign the reference set from S3 for Replicate.** Always use the whole
+   numbered set — no per-scene selection:
    ```bash
-   # a) download all of fred/reference from Drive to a temp dir (bytes stay on disk)
-   uv run .claude/skills/google-drive/scripts/drive_download.py \
-     --folder fred/reference --all --dest /tmp/fred-refs
-   # b) upload them to Replicate -> full-res HTTP URLs (only short URLs enter context)
-   uv run .claude/skills/seedance-video/scripts/upload_to_replicate.py \
-     /tmp/fred-refs/*.webp --json > refs.json
+   # presign all of media/fred/reference as ordered HTTPS URLs (bytes stay in S3)
+   uv run .claude/skills/s3/scripts/s3_presign.py --folder fred/reference --json > refs.json
    ```
-   Pass every resulting URL as `reference_images` (Seedance accepts up to 9), and
-   cite them in the prompt as `[Image1] … [Image9]` (`fred_1`→`[Image1]`, …).
+   Pass every `.url` as `reference_images` (Seedance accepts up to 9), and cite
+   them in the prompt as `[Image1] … [Image9]` (`fred_1`→`[Image1]`, …). The list
+   is returned in `fred_1..fred_9` order; only the short signed URLs enter the
+   agent context, never the image bytes.
    - Remember: `reference_images` **cannot** be combined with a first-frame
      `image`. For an exact starting frame instead of character transfer, use
      `image` and drop `reference_images`.
-   - No `REPLICATE_API_TOKEN`? Fall back to small inline data URLs with
-     `img2datauri.py --max-bytes 12000` (see the `seedance-video` skill).
+   - The bucket is private; presigned URLs default to a 1 h expiry — fine for a
+     render. Run `aws login` if the s3 script reports it can't resolve creds.
 3. **Write the prompt** using the template below, translating the profile into
    concrete visual/audio direction. Put any spoken line in **double quotes** so
    Seedance generates the audio in Fred's voice.
 4. **Generate** with the Replicate MCP `create_models_predictions`
    (`model_owner: "bytedance"`, `model_name: "seedance-2.0"`, no `Prefer: wait`).
-   Poll `get_predictions` until `succeeded`, then save the MP4 to Drive under
-   `fred/output/` (see [`seedance-video`](../seedance-video/SKILL.md) → "Output
-   location" for the download-then-upload pattern and naming).
+   Poll `get_predictions` until `succeeded`, then save the MP4 to S3 under
+   `media/fred/output/` (see [`seedance-video`](../seedance-video/SKILL.md) →
+   "Output location" for the download-then-upload pattern and naming).
 5. **Verify against the checklist** (§7 of the profile): mustache present and
    full, wavy swept-back hair, small/narrow chin, leather trousers/boots,
    V-taper (not over-bulked), pen-and-ink crosshatch rendering, detailed Hudson

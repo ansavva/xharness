@@ -12,3 +12,11 @@ token.json
 
 # Generated video output (seedance-video skill)
 /output/
+
+# Terraform (infra/) — local state, cached providers, plan files
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+*.tfvars.local

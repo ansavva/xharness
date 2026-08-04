@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 #
-# sync_reference_set.sh — populate Fred's Google Drive folders. Fred's images are
-# NOT stored in git; they live in Drive, and the ORIGINALS are kept SEPARATE from
-# the curated REFERENCE set:
+# sync_reference_set.sh — populate Fred's S3 folders. Fred's images are NOT stored
+# in git; they live in the xharness-assets bucket under media/fred/, and the
+# ORIGINALS are kept SEPARATE from the curated REFERENCE set:
 #
-#   <root>/fred/originals/    all source illustrations, archived  (fred_1.webp ..)
-#   <root>/fred/reference/    curated set used on every generation (fred_1.webp .. fred_9.webp)
+#   media/fred/originals/    all source illustrations, archived  (fred_1.webp ..)
+#   media/fred/reference/    curated set used on every generation (fred_1.webp .. fred_9.webp)
 #
 # Everything uploaded is renamed to `fred_<index>.webp` (the opaque Instagram
 # filenames are dropped). The reference set is a curated, re-ordered SUBSET of the
-# originals — the `fred` skill downloads *this* folder and passes all of it as
+# originals — the `fred` skill presigns *this* folder and passes all of it as
 # `reference_images` on every generation, so the character stays consistent
 # without re-choosing references. To change the set, edit REF_MAP below.
 #
@@ -23,9 +23,9 @@
 #   --reference-only  Only (re)upload the curated reference set.
 #   --originals-only  Only (re)upload the originals archive.
 #
-# Re-runs are idempotent: drive_upload.py updates a same-named file in place
-# rather than duplicating it. Requires a Google Drive credential in .env
-# (see .env.example).
+# Re-runs are idempotent: s3_upload.py overwrites a same-named key in place (the
+# bucket is versioned, so prior revisions are kept) rather than duplicating it.
+# Requires an AWS login — run `aws login` first (see the s3 skill).
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
@@ -49,7 +49,7 @@ done
 ORIG_REF="${FRED_ORIG_REF:-6404638b606cc7e2685dc2057016c2d99c55e8f5}"
 ORIG_PATH=".claude/skills/fred/images"
 
-UPLOAD=".claude/skills/google-drive/scripts/drive_upload.py"
+UPLOAD=".claude/skills/s3/scripts/s3_upload.py"
 
 # Curated reference set: output index -> original filename. The order defines the
 # [Image1]..[ImageN] slots the fred skill cites (fred_1 -> [Image1], ...).
@@ -118,4 +118,4 @@ if [ "$DO_REFERENCE" = 1 ]; then
   uv run "$UPLOAD" --folder fred/reference "$STAGE"/reference/*.webp
 fi
 
-echo "Done. Fred's images now live in Google Drive under <root>/fred/{originals,reference}." >&2
+echo "Done. Fred's images now live in S3 under media/fred/{originals,reference}." >&2

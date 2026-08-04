@@ -58,16 +58,16 @@ If a create call ever errors or times out, **don't blindly re-create it** —
 first `list_predictions` (filtered to `bytedance/seedance-2.0`) to see whether a
 job is already `processing`/`succeeded`, and `cancel_predictions` any duplicates.
 
-### Output location (always) — save to Google Drive
+### Output location (always) — save to S3
 
-Generated videos are stored in **Google Drive**, not in git. Save **every**
-video to `<root>/<character>/output/` (`<root>` defaults to `xharness`); for a
-video not tied to a character use `<root>/misc/output/`. Give the filename a
-date-time so runs never overwrite each other: `YYYY-MM-DD_HH-MM-SS_<slug>.mp4`
-with a short descriptive `<slug>` (e.g. `waving-9x16`).
+Generated videos are stored in **S3** (bucket `xharness-assets`), not in git.
+Save **every** video under `media/<character>/output/`; for a video not tied to a
+character use `media/misc/output/`. Give the filename a date-time so runs never
+overwrite each other: `YYYY-MM-DD_HH-MM-SS_<slug>.mp4` with a short descriptive
+`<slug>` (e.g. `waving-9x16`).
 
 The flow is download-then-upload — Replicate's output URL → a local staging file
-→ Drive — so the video bytes never pass through the agent context:
+→ S3 — so the video bytes never pass through the agent context:
 
 ```bash
 # 1) stage the render locally (output/ is git-ignored)
@@ -75,15 +75,15 @@ mkdir -p output/fred
 NAME="$(date +%Y-%m-%d_%H-%M-%S)_<slug>.mp4"
 curl -sL "<output_url>" -o "output/fred/$NAME"
 
-# 2) upload the staged file to Drive (folder is created if missing) — google-drive skill
-uv run .claude/skills/google-drive/scripts/drive_upload.py \
+# 2) upload the staged file to S3 (media/fred/output/) — s3 skill
+uv run .claude/skills/s3/scripts/s3_upload.py \
   --folder fred/output "output/fred/$NAME"
 ```
 
-Report the Drive link (`webViewLink`) that `drive_upload.py` prints. The local
-`output/fred/` copy is just staging; Drive is the canonical store. Uploading
-needs a Google Drive credential in `.env` (see `.env.example`); without one,
-leave the file in `output/` and tell the user it wasn't pushed to Drive.
+Report the `s3://` URI that `s3_upload.py` prints (add `--presign` for a
+shareable HTTPS link). The local `output/fred/` copy is just staging; S3 is the
+canonical store. Uploading needs an AWS login (`aws login`; see the `s3` skill);
+without one, leave the file in `output/` and tell the user it wasn't pushed to S3.
 
 Minimal example input:
 
@@ -106,73 +106,66 @@ the request*, not merely read. If you are about to call the model with only a
 
 - Seedance 2.0 accepts up to **9** `reference_images`. Reference them in the
   prompt as `[Image1]`, `[Image2]`, …
-- Each character keeps a **fixed, numbered reference set in Google Drive** (at
-  `<root>/<character>/reference/`), used in full on every generation so identity
-  stays locked without re-picking. Fetch it with `drive_download.py --all`, then
-  turn the local files into Replicate URLs (below). The character's own skill
-  (e.g. `fred`) documents its set.
+- Each character keeps a **fixed, numbered reference set in S3** (at
+  `media/<character>/reference/`), used in full on every generation so identity
+  stays locked without re-picking. Presign it with `s3_presign.py --folder
+  <character>/reference` to get ordered HTTPS URLs (below). The character's own
+  skill (e.g. `fred`) documents its set.
 - `reference_images` **cannot** be combined with `image` / `last_frame_image`.
 
-### How image files reach Replicate (base64 data URLs vs HTTP URLs)
+### How image files reach Replicate (presigned S3 URLs)
 
-Replicate accepts a file input only in one of two forms:
-
-- **HTTP(S) URL** — best for anything **> 256 KB**, for reuse, or for many
-  files. Only a short URL travels in the request; Replicate fetches the image.
-- **data URL** — the image base64-encoded inline as
-  `data:image/jpeg;base64,<...>`. Replicate's guidance caps data URLs at
-  **≤ 256 KB**. Nothing is hosted and Replicate does not store it.
-
-Since references (and outputs) are stored in Google Drive, the reference
-pipeline is: **Drive → local temp → Replicate URL**. Drive access is provided by
-the separate **`google-drive`** skill (`drive_download.py` / `drive_upload.py`);
-the Replicate-side helpers (`img2datauri.py`, `upload_to_replicate.py`) live
-beside this skill:
+Replicate accepts a file input as a URL or an inline data URL. Since references
+and outputs live in **S3**, the primary path is a **presigned HTTPS URL**: the
+object stays private, Replicate fetches it via a short-lived signed URL, and only
+a short URL (never the bytes) enters the agent context. No `REPLICATE_API_TOKEN`
+is needed for references.
 
 ```bash
-# 0) Pull a character's fixed reference set out of Drive to a local temp dir (google-drive skill)
-uv run .claude/skills/google-drive/scripts/drive_download.py \
-  --folder fred/reference --all --dest /tmp/fred-refs
+# References: presign a character's fixed set, in fred_1..fred_N order, as JSON (s3 skill)
+uv run .claude/skills/s3/scripts/s3_presign.py --folder fred/reference --json > refs.json
+# -> [{ "key": "media/fred/reference/fred_1.webp", "url": "https://..." }, ...]
+# Pass the .url values as reference_images; fred_1 -> [Image1], fred_2 -> [Image2], ...
 
-# 1) Local image -> HTTP URL via Replicate Files API (needs REPLICATE_API_TOKEN; see .env)
-uv run .claude/skills/seedance-video/scripts/upload_to_replicate.py /tmp/fred-refs/*.webp --json > refs.json
+# After rendering: upload the finished MP4 to S3 (s3 skill)
+uv run .claude/skills/s3/scripts/s3_upload.py --folder fred/output output/fred/<name>.mp4
+```
 
-# 1b) No token? Local image -> small data URL (downscale/recompress to fit --max-bytes)
+Fallbacks for ad-hoc **local** images not in S3 (the Replicate-side helpers live
+beside this skill):
+
+```bash
+# Local image -> HTTP URL via Replicate Files API (needs REPLICATE_API_TOKEN; see .env)
+uv run .claude/skills/seedance-video/scripts/upload_to_replicate.py <img>... --json > refs.json
+
+# No token? Local image -> small inline data URL (downscale/recompress to fit --max-bytes)
 uv run .claude/skills/seedance-video/scripts/img2datauri.py <img>... --max-bytes 12000 --json > refs.json
-
-# 2) After rendering: push the finished MP4 up to Drive (google-drive skill)
-uv run .claude/skills/google-drive/scripts/drive_upload.py --folder fred/output output/fred/<name>.mp4
 ```
 
 `img2datauri.py` flags: `--json`, `--out FILE`, `--max-bytes N` (default 262144),
-`--format jpeg|webp|png`, `--save-dir DIR`.
-The Drive scripts (`drive_download.py` / `drive_upload.py`) take
-`--folder <path-under-root>` and a Google Drive credential from `.env`; they move
-bytes disk↔Drive directly, so nothing is base64-inlined into the agent context.
-See the **`google-drive`** skill for details and OAuth setup.
+`--format jpeg|webp|png`, `--save-dir DIR`. Presigned S3 URLs default to a 1 h
+expiry (`--expires` to change) — plenty for a render job. See the **`s3`** skill
+for details and `aws login` setup.
 
-### Full-res references vs the small-data-URL workaround (important)
+### Full-res references, zero context cost
 
-**Seedance and Replicate do NOT require tiny references.** Sharper references
-give better character consistency. With a `REPLICATE_API_TOKEN` configured in
-`.env`, the base64/context limitation below is **fully overcome** — upload
-full-size images and pass HTTP URLs (only short URLs enter the agent context).
-Two ways to supply references:
+**Seedance and Replicate do NOT require tiny references** — sharper references
+give better character consistency, and presigned S3 URLs carry full-resolution
+images at zero context cost (only the short URL enters the agent context). Order
+of preference:
 
-- **PREFERRED — HTTP URLs (full resolution, zero context cost).** With a
-  `REPLICATE_API_TOKEN` present (put it in `.env` at the repo root, copied from
-  `.env.example`), run `upload_to_replicate.py` to POST each image to
-  `https://api.replicate.com/v1/files` and get back a served URL. Only short URLs
-  go into the prediction `input` — no base64 ever enters the agent context, so
-  images can be full size. **Use this whenever the token is available.**
-- **FALLBACK — inline data URLs, kept small.** Without a token, the only path is
-  inlining the base64 data URL into the MCP tool call. That base64 lands in the
-  agent context, where it tokenizes at ≈ **1 token per character** (an 80 KB data
-  URL ≈ 80k tokens, paid on read + write), so a few full-size refs would blow the
-  context window. Cap each data URL at ~10–15 KB via `img2datauri.py --max-bytes
-  12000`. Seedance downsamples references anyway, so small refs still steer
-  identity/style/wardrobe — just with weaker fine detail. This smallness is an
-  agent-tooling limit, **not** a model limit.
+- **PREFERRED — presigned S3 URLs (full resolution).** References already live in
+  S3, so `s3_presign.py` hands Replicate full-size images via signed URLs. No
+  token, no base64. Use this for any character reference set.
+- **Local image, have a token — Replicate Files API.** For an ad-hoc local image
+  not in S3, `upload_to_replicate.py` (needs `REPLICATE_API_TOKEN`) POSTs it and
+  returns a served URL — again full size, only a short URL in context.
+- **Local image, no token — inline data URL, kept small.** Last resort: inline a
+  base64 data URL into the MCP call. That base64 lands in the agent context at ≈
+  **1 token per character** (an 80 KB data URL ≈ 80k tokens), so cap each at
+  ~10–15 KB via `img2datauri.py --max-bytes 12000`. Seedance downsamples
+  references anyway, so small refs still steer identity/style — with weaker fine
+  detail. This smallness is an agent-tooling limit, **not** a model limit.
 
 ## Available Replicate MCP tools (common)
 
@@ -188,13 +181,13 @@ Always pass a `jq_filter` to these tools to keep responses small (e.g.
 ## Characters
 
 Each character owns its own skill under `.claude/skills/<name>/`, self-contained
-with a `profile.md` (the character bible). Its **reference images live in Google
-Drive** (`<root>/<name>/reference/`), not in git. That skill reads the profile,
-downloads its fixed reference set, converts it to Replicate URLs, and composes
-the prompt so the output stays on-model. This engine skill is character-agnostic.
+with a `profile.md` (the character bible). Its **reference images live in S3**
+(`media/<name>/reference/`), not in git. That skill reads the profile, presigns
+its fixed reference set into Replicate URLs, and composes the prompt so the
+output stays on-model. This engine skill is character-agnostic.
 
 - **Fred** — recurring illustrated character (the "Gays of Hudson" series).
-  Skill: `.claude/skills/fred/`. Reference set: Drive `fred/reference`.
+  Skill: `.claude/skills/fred/`. Reference set: S3 `media/fred/reference`.
 
 ### Adding a new character
 
@@ -202,8 +195,8 @@ the prompt so the output stays on-model. This engine skill is character-agnostic
    rewrite the prompt template + guardrails for the new character.
 2. `.claude/skills/<name>/profile.md` — the character bible (mirror Fred's
    sections: at-a-glance, face, body, wardrobe, art style, voice, checklist).
-3. Upload the character's images to Drive with `<name>/scripts/sync_reference_set.sh`
-   (mirror Fred's): the full **originals** archive to `<name>/originals/` and the
-   curated, numbered **reference** set to `<name>/reference/`, kept separate and
-   named `<name>_<index>.webp`.
-4. Videos save to Drive `<name>/output/`. No change to this engine skill is needed.
+3. Upload the character's images to S3 with `<name>/scripts/sync_reference_set.sh`
+   (mirror Fred's): the full **originals** archive to `media/<name>/originals/`
+   and the curated, numbered **reference** set to `media/<name>/reference/`, kept
+   separate and named `<name>_<index>.webp`.
+4. Videos save to S3 `media/<name>/output/`. No change to this engine skill is needed.
