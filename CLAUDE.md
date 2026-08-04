@@ -11,7 +11,9 @@ metadata — each script declares its own dependencies, no shared venv.
 ```
 xharness/
 ├── .claude/
-│   ├── settings.json              — pre-approved Bash permissions
+│   ├── settings.json              — pre-approved Bash permissions + SessionStart hook
+│   ├── hooks/
+│   │   └── session-start.sh       — runs dev-setup on session start
 │   └── skills/
 │       ├── qr/
 │       │   ├── SKILL.md
@@ -28,6 +30,8 @@ xharness/
 │           ├── SKILL.md
 │           └── scripts/
 │               └── kindle.py
+├── scripts/
+│   └── dev-setup.sh               — idempotent prerequisite installer
 └── CLAUDE.md
 ```
 
@@ -36,12 +40,19 @@ xharness/
 ## One-time setup
 
 ```bash
-brew install uv
+scripts/dev-setup.sh
 ```
 
-That's it — `uv` handles Python versions and dependencies automatically per script.
+This installs the only hard prerequisite — `uv` — if it's missing, and warms
+the dependency caches for the cross-platform skills. It's idempotent, so it's
+safe to run any time. `uv` then handles Python versions and dependencies
+automatically per script. (`brew install uv` also works if you prefer.)
 
-External tools required by some skills:
+The script runs automatically at the start of every Claude Code session via
+the `SessionStart` hook registered in `.claude/settings.json`, so remote/web
+sessions come up ready to use.
+
+External tools required by some skills (installed separately, per platform):
 - **Calibre CLI** (`ebook-convert`) — https://calibre-ebook.com — required for `kindle`
 - **exiftool** — `brew install exiftool` — required for future photo metadata embedding
 
