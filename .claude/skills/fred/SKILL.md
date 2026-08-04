@@ -26,37 +26,44 @@ call/poll details.
 - **Character bible:** [`profile.md`](profile.md) — read it before writing any
   prompt. It defines his face, mustache (non-negotiable), body, wardrobe, art
   style, voice, and a consistency checklist.
-- **Reference set:** a fixed, numbered set of illustrations stored in **Google
-  Drive** at `<root>/fred/reference/` (`01.webp … 09.webp`; `<root>` defaults to
-  `xharness`). These are *not* in git. Prior renders are saved to Drive at
-  `<root>/fred/output/` (and staged locally under `output/fred/`, git-ignored).
+- **Images (Google Drive, not git):** `<root>` defaults to `xharness`.
+  - **Reference set** — `<root>/fred/reference/` (`fred_1.webp … fred_9.webp`):
+    the fixed, curated set used on **every** generation.
+  - **Originals archive** — `<root>/fred/originals/` (`fred_1.webp … fred_26.webp`):
+    all source illustrations, kept **separate** from the reference set (an archive
+    to re-curate from; not used at generation time).
+  - **Renders** — `<root>/fred/output/` (also staged locally under `output/fred/`,
+    git-ignored).
 
 ## The reference set
 
 Fred always generates from the **same nine reference images** so his identity
-stays locked without re-choosing references each run. They live in Drive
-(`fred/reference`) and are numbered `01`–`09`:
+stays locked without re-choosing references each run. They live in Drive at
+`fred/reference/`, named `fred_1`–`fred_9` (each `fred_N` → prompt slot `[ImageN]`):
 
-| # | What it anchors |
+| file | What it anchors |
 |---|---|
-| 01 | Face close-up — mustache, hair, brow, chin |
-| 02 | Shirtless front (meditation) — face + torso, V-taper, chest hair |
-| 03 | Full body, shirtless + jeans — proportions |
-| 04 | Seated, white tee + leather pants — canonical wardrobe |
-| 05 | Walking, button shirt + jeans — clothed full body + demeanor |
-| 06 | Porch reading, shirtless + leather — pen-and-ink style |
-| 07 | Driving, white tank — arms/forearms + 3/4 face |
-| 08 | City, white button shirt + leather — clothed full body (alt) |
-| 09 | Shaving close-up — mustache detail |
+| fred_1 | Face close-up — mustache, hair, brow, chin |
+| fred_2 | Shirtless front (meditation) — face + torso, V-taper, chest hair |
+| fred_3 | Full body, shirtless + jeans — proportions |
+| fred_4 | Seated, white tee + leather pants — canonical wardrobe |
+| fred_5 | Walking, button shirt + jeans — clothed full body + demeanor |
+| fred_6 | Porch reading, shirtless + leather — pen-and-ink style |
+| fred_7 | Driving, white tank — arms/forearms + 3/4 face |
+| fred_8 | City, white button shirt + leather — clothed full body (alt) |
+| fred_9 | Shaving close-up — mustache detail |
 
-To (re)build and upload this set to Drive, run the one-time migration:
+To (re)build and upload the Drive folders, run the one-time migration (uploads
+the originals archive **and** the curated reference set; renames everything to
+`fred_<index>.webp`):
 
 ```bash
-.claude/skills/fred/scripts/sync_reference_set.sh
+.claude/skills/fred/scripts/sync_reference_set.sh              # both folders
+.claude/skills/fred/scripts/sync_reference_set.sh --reference-only   # just the set
 ```
 
-(Requires a Google Drive credential in `.env` — see `.env.example`. Edit the
-`MAP` in that script to change the set.)
+(Requires a Google Drive credential in `.env` — see `.env.example`. Edit
+`REF_MAP` in that script to change which originals make up the reference set.)
 
 ## Workflow
 
@@ -73,7 +80,7 @@ To (re)build and upload this set to Drive, run the one-time migration:
      /tmp/fred-refs/*.webp --json > refs.json
    ```
    Pass every resulting URL as `reference_images` (Seedance accepts up to 9), and
-   cite them in the prompt as `[Image1] … [Image9]` (01→`[Image1]`, …).
+   cite them in the prompt as `[Image1] … [Image9]` (`fred_1`→`[Image1]`, …).
    - Remember: `reference_images` **cannot** be combined with a first-frame
      `image`. For an exact starting frame instead of character transfer, use
      `image` and drop `reference_images`.

@@ -199,6 +199,8 @@ the prompt so the output stays on-model. This engine skill is character-agnostic
    rewrite the prompt template + guardrails for the new character.
 2. `.claude/skills/<name>/profile.md` — the character bible (mirror Fred's
    sections: at-a-glance, face, body, wardrobe, art style, voice, checklist).
-3. Upload the character's numbered reference set to Drive `<name>/reference/`
-   (mirror `fred/scripts/sync_reference_set.sh`).
+3. Upload the character's images to Drive with `<name>/scripts/sync_reference_set.sh`
+   (mirror Fred's): the full **originals** archive to `<name>/originals/` and the
+   curated, numbered **reference** set to `<name>/reference/`, kept separate and
+   named `<name>_<index>.webp`.
 4. Videos save to Drive `<name>/output/`. No change to this engine skill is needed.

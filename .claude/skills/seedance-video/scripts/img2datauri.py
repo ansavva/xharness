@@ -26,10 +26,10 @@ Usage (via uv — no venv or manual install needed):
     S=.claude/skills/seedance-video/scripts/img2datauri.py
 
     # Print one data URL to stdout
-    uv run $S /tmp/fred-refs/01.webp
+    uv run $S /tmp/fred-refs/fred_1.webp
 
     # Write the data URL to a .txt sidecar instead of stdout
-    uv run $S /tmp/fred-refs/01.webp --out some.datauri.txt
+    uv run $S /tmp/fred-refs/fred_1.webp --out some.datauri.txt
 
     # Several images -> JSON map {path: data_url}, ready to paste as reference_images
     uv run $S /tmp/fred-refs/*.webp --json > refs.json
