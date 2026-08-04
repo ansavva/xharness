@@ -22,18 +22,22 @@ Drive API needs a user OAuth credential; the fields are
 `GOOGLE_DRIVE_REFRESH_TOKEN` (or a short-lived `GOOGLE_DRIVE_ACCESS_TOKEN` for a
 quick test). Full console steps are documented in `.env.example`.
 
-**Easiest way to get the refresh token** — once the client ID + secret are in
-`.env`, add `http://localhost:8765/` as an Authorized redirect URI on the OAuth
-client, then run:
+**Easiest way to get the refresh token** — create a **Desktop app** OAuth client
+in Google Cloud Console (APIs & Services → Credentials), download its JSON, save
+it as `credentials.json` next to the repo (git-ignored), then run:
 
 ```bash
 uv run .claude/skills/google-drive/scripts/drive_auth.py
 ```
 
-It opens the Google consent screen, captures the redirect on localhost,
-exchanges the code, **writes `GOOGLE_DRIVE_REFRESH_TOKEN` back into `.env`**, and
-verifies access. Re-run it whenever the token expires (OAuth *Testing*-mode
-refresh tokens lapse after 7 days — click "Publish app" on the consent screen to
+It uses `google-auth-oauthlib`'s installed-app flow: a browser opens, a
+**loopback server on an ephemeral port** captures the redirect (Desktop clients
+allow this with **no redirect-URI registration**), the code is exchanged, and
+the script **writes `GOOGLE_DRIVE_CLIENT_ID` / `_CLIENT_SECRET` /
+`_REFRESH_TOKEN` into `.env`** and verifies access. If you already have a
+Desktop client's ID + secret in `.env`, it uses those instead of
+`credentials.json`. Re-run whenever the refresh token is revoked or a
+*Testing*-mode token lapses (7 days — "Publish app" on the consent screen to
 avoid that).
 
 **Scope / the "Google hasn't verified this app" screen:** `drive_auth.py`
