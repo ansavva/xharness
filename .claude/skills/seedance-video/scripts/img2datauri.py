@@ -7,11 +7,16 @@
 img2datauri.py — make any local image usable as a Replicate reference input.
 
 Replicate's API only accepts files as HTTP(S) URLs or **data URLs**, and a data
-URL must be small (the practical cap is ~256 KB). Most of the images in
-`fred_images/` are larger than that. This tool shrinks an image (downscale +
+URL must be small (the practical cap is ~256 KB). Full-resolution reference
+images are usually larger than that. This tool shrinks an image (downscale +
 recompress) until its **data URL** fits under the budget, then emits the data
 URL — so any local image can be passed straight into a Seedance 2.0 prediction
 as `reference_images` / `image` without hosting it anywhere.
+
+This is the no-token FALLBACK path. When a REPLICATE_API_TOKEN is available,
+prefer upload_to_replicate.py (full-res HTTP URLs, no context cost). Reference
+images themselves are stored in Google Drive — fetch them locally first with
+drive_download.py, then run this on the downloaded files.
 
 The budget is measured on the final data-URL STRING (the exact bytes sent to the
 API), so a successful result is guaranteed to fit.
@@ -21,19 +26,16 @@ Usage (via uv — no venv or manual install needed):
     S=.claude/skills/seedance-video/scripts/img2datauri.py
 
     # Print one data URL to stdout
-    uv run $S .claude/skills/fred/images/some.webp
+    uv run $S /tmp/fred-refs/01.webp
 
     # Write the data URL to a .txt sidecar instead of stdout
-    uv run $S .claude/skills/fred/images/some.webp --out some.datauri.txt
+    uv run $S /tmp/fred-refs/01.webp --out some.datauri.txt
 
     # Several images -> JSON map {path: data_url}, ready to paste as reference_images
-    uv run $S .claude/skills/fred/images/*.webp --json > refs.json
+    uv run $S /tmp/fred-refs/*.webp --json > refs.json
 
     # Also drop compressed image files you can commit / host later
-    uv run $S .claude/skills/fred/images/*.webp --save-dir output/compressed
-
-    NOTE: prefer upload_to_replicate.py (full-res HTTP URLs) when a
-    REPLICATE_API_TOKEN is available; use this only for the small-data-URL fallback.
+    uv run $S /tmp/fred-refs/*.webp --save-dir output/compressed
 
 Options:
     --max-bytes N   Budget for the data-URL string in bytes (default 262144 = 256 KiB)

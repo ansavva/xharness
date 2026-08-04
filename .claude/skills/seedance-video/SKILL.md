@@ -58,20 +58,32 @@ If a create call ever errors or times out, **don't blindly re-create it** —
 first `list_predictions` (filtered to `bytedance/seedance-2.0`) to see whether a
 job is already `processing`/`succeeded`, and `cancel_predictions` any duplicates.
 
-### Output location (always)
+### Output location (always) — save to Google Drive
 
-Save **every** generated video under `output/<character>/` at the repo root, with
-a date-time in the filename so runs never overwrite each other. Use the format
-`YYYY-MM-DD_HH-MM-SS` (local time). For a video not tied to a character, use
-`output/misc/`. The `output/` directory is git-ignored. Create it if missing.
+Generated videos are stored in **Google Drive**, not in git. Save **every**
+video to `<root>/<character>/output/` (`<root>` defaults to `xharness`); for a
+video not tied to a character use `<root>/misc/output/`. Give the filename a
+date-time so runs never overwrite each other: `YYYY-MM-DD_HH-MM-SS_<slug>.mp4`
+with a short descriptive `<slug>` (e.g. `waving-9x16`).
+
+The flow is download-then-upload — Replicate's output URL → a local staging file
+→ Drive — so the video bytes never pass through the agent context:
 
 ```bash
+# 1) stage the render locally (output/ is git-ignored)
 mkdir -p output/fred
-curl -sL "<output_url>" -o "output/fred/$(date +%Y-%m-%d_%H-%M-%S)_<slug>.mp4"
+NAME="$(date +%Y-%m-%d_%H-%M-%S)_<slug>.mp4"
+curl -sL "<output_url>" -o "output/fred/$NAME"
+
+# 2) upload the staged file to Drive (folder is created if missing)
+uv run .claude/skills/seedance-video/scripts/drive_upload.py \
+  --folder fred/output "output/fred/$NAME"
 ```
 
-Pick a short descriptive `<slug>` (e.g. `waving-9x16`), so a filename looks like
-`output/fred/2026-08-03_19-42-05_waving-9x16.mp4`. Then report the saved path.
+Report the Drive link (`webViewLink`) that `drive_upload.py` prints. The local
+`output/fred/` copy is just staging; Drive is the canonical store. Uploading
+needs a Google Drive credential in `.env` (see `.env.example`); without one,
+leave the file in `output/` and tell the user it wasn't pushed to Drive.
 
 Minimal example input:
 
@@ -93,8 +105,12 @@ the request*, not merely read. If you are about to call the model with only a
 `prompt` for a character, STOP and add `reference_images` first.
 
 - Seedance 2.0 accepts up to **9** `reference_images`. Reference them in the
-  prompt as `[Image1]`, `[Image2]`, … Use 2–4 that match the target
-  angle / wardrobe / build.
+  prompt as `[Image1]`, `[Image2]`, …
+- Each character keeps a **fixed, numbered reference set in Google Drive** (at
+  `<root>/<character>/reference/`), used in full on every generation so identity
+  stays locked without re-picking. Fetch it with `drive_download.py --all`, then
+  turn the local files into Replicate URLs (below). The character's own skill
+  (e.g. `fred`) documents its set.
 - `reference_images` **cannot** be combined with `image` / `last_frame_image`.
 
 ### How image files reach Replicate (base64 data URLs vs HTTP URLs)
@@ -107,19 +123,30 @@ Replicate accepts a file input only in one of two forms:
   `data:image/jpeg;base64,<...>`. Replicate's guidance caps data URLs at
   **≤ 256 KB**. Nothing is hosted and Replicate does not store it.
 
-Two helper scripts live beside this skill:
+Since references (and outputs) are stored in Google Drive, the reference
+pipeline is: **Drive → local temp → Replicate URL**. Four helper scripts live
+beside this skill:
 
 ```bash
-# 1) Local image -> fitting data URL (downscale/recompress until it fits --max-bytes)
-uv run .claude/skills/seedance-video/scripts/img2datauri.py <img> --max-bytes 12000 --out ref1.txt
-uv run .claude/skills/seedance-video/scripts/img2datauri.py <img>... --json > refs.json
+# 0) Pull a character's fixed reference set out of Drive to a local temp dir
+uv run .claude/skills/seedance-video/scripts/drive_download.py \
+  --folder fred/reference --all --dest /tmp/fred-refs
 
-# 2) Local image -> HTTP URL via Replicate Files API (needs REPLICATE_API_TOKEN; see .env)
-uv run .claude/skills/seedance-video/scripts/upload_to_replicate.py <img>... --json > refs.json
+# 1) Local image -> HTTP URL via Replicate Files API (needs REPLICATE_API_TOKEN; see .env)
+uv run .claude/skills/seedance-video/scripts/upload_to_replicate.py /tmp/fred-refs/*.webp --json > refs.json
+
+# 1b) No token? Local image -> small data URL (downscale/recompress to fit --max-bytes)
+uv run .claude/skills/seedance-video/scripts/img2datauri.py <img>... --max-bytes 12000 --json > refs.json
+
+# 2) After rendering: push the finished MP4 up to Drive
+uv run .claude/skills/seedance-video/scripts/drive_upload.py --folder fred/output output/fred/<name>.mp4
 ```
 
 `img2datauri.py` flags: `--json`, `--out FILE`, `--max-bytes N` (default 262144),
 `--format jpeg|webp|png`, `--save-dir DIR`.
+`drive_download.py` / `drive_upload.py` take `--folder <path-under-root>` and a
+Google Drive credential from `.env` (see `.env.example`); they move bytes
+disk↔Drive directly, so nothing is base64-inlined into the agent context.
 
 ### Full-res references vs the small-data-URL workaround (important)
 
@@ -158,12 +185,13 @@ Always pass a `jq_filter` to these tools to keep responses small (e.g.
 ## Characters
 
 Each character owns its own skill under `.claude/skills/<name>/`, self-contained
-with a `profile.md` (the character bible) and an `images/` directory. That skill
-reads the profile, picks + converts reference images, and composes the prompt so
-the output stays on-model. This engine skill is character-agnostic.
+with a `profile.md` (the character bible). Its **reference images live in Google
+Drive** (`<root>/<name>/reference/`), not in git. That skill reads the profile,
+downloads its fixed reference set, converts it to Replicate URLs, and composes
+the prompt so the output stays on-model. This engine skill is character-agnostic.
 
 - **Fred** — recurring illustrated character (the "Gays of Hudson" series).
-  Skill: `.claude/skills/fred/`.
+  Skill: `.claude/skills/fred/`. Reference set: Drive `fred/reference`.
 
 ### Adding a new character
 
@@ -171,5 +199,6 @@ the output stays on-model. This engine skill is character-agnostic.
    rewrite the prompt template + guardrails for the new character.
 2. `.claude/skills/<name>/profile.md` — the character bible (mirror Fred's
    sections: at-a-glance, face, body, wardrobe, art style, voice, checklist).
-3. `.claude/skills/<name>/images/` — drop reference images here.
-4. Videos save to `output/<name>/`. No change to this engine skill is needed.
+3. Upload the character's numbered reference set to Drive `<name>/reference/`
+   (mirror `fred/scripts/sync_reference_set.sh`).
+4. Videos save to Drive `<name>/output/`. No change to this engine skill is needed.

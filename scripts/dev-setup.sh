@@ -73,6 +73,8 @@ prewarm qr              "$REPO_ROOT/.claude/skills/qr/scripts/generate.py"
 prewarm kindle          "$REPO_ROOT/.claude/skills/kindle/scripts/kindle.py"
 prewarm img2datauri     "$REPO_ROOT/.claude/skills/seedance-video/scripts/img2datauri.py"
 prewarm replicate-upload "$REPO_ROOT/.claude/skills/seedance-video/scripts/upload_to_replicate.py"
+prewarm drive-upload    "$REPO_ROOT/.claude/skills/seedance-video/scripts/drive_upload.py"
+prewarm drive-download  "$REPO_ROOT/.claude/skills/seedance-video/scripts/drive_download.py"
 
 # ---------------------------------------------------------------------------
 # 3. Report optional external tools (never fatal — platform dependent).

@@ -15,51 +15,78 @@ create-then-poll flow, output naming, how references reach Replicate) live in th
 **[`seedance-video`](../seedance-video/SKILL.md)** engine skill — read it for the
 call/poll details.
 
-> **MANDATORY:** every Fred video MUST pass Fred's reference images in the
+> **MANDATORY:** every Fred video MUST pass Fred's reference set in the
 > `reference_images` input — never generate from the text prompt alone (it
-> drifts off-model). Not optional. See the `seedance-video` skill →
-> "Reference images are MANDATORY" and "How image files reach Replicate" for the
-> base64/data-URL mechanics, the ≤ 256 KB rule, and the full-res HTTP-URL path.
+> drifts off-model). Not optional. The set is **fixed** (see "The reference set"
+> below): you pass the same numbered images every time, so there's nothing to
+> re-pick per scene.
 
 ## Source of truth
 
 - **Character bible:** [`profile.md`](profile.md) — read it before writing any
   prompt. It defines his face, mustache (non-negotiable), body, wardrobe, art
   style, voice, and a consistency checklist.
-- **Reference illustrations:** [`images/`](images/) — 26 reference images. Prior
-  renders are saved under `output/fred/` at the repo root (git-ignored).
+- **Reference set:** a fixed, numbered set of illustrations stored in **Google
+  Drive** at `<root>/fred/reference/` (`01.webp … 09.webp`; `<root>` defaults to
+  `xharness`). These are *not* in git. Prior renders are saved to Drive at
+  `<root>/fred/output/` (and staged locally under `output/fred/`, git-ignored).
+
+## The reference set
+
+Fred always generates from the **same nine reference images** so his identity
+stays locked without re-choosing references each run. They live in Drive
+(`fred/reference`) and are numbered `01`–`09`:
+
+| # | What it anchors |
+|---|---|
+| 01 | Face close-up — mustache, hair, brow, chin |
+| 02 | Shirtless front (meditation) — face + torso, V-taper, chest hair |
+| 03 | Full body, shirtless + jeans — proportions |
+| 04 | Seated, white tee + leather pants — canonical wardrobe |
+| 05 | Walking, button shirt + jeans — clothed full body + demeanor |
+| 06 | Porch reading, shirtless + leather — pen-and-ink style |
+| 07 | Driving, white tank — arms/forearms + 3/4 face |
+| 08 | City, white button shirt + leather — clothed full body (alt) |
+| 09 | Shaving close-up — mustache detail |
+
+To (re)build and upload this set to Drive, run the one-time migration:
+
+```bash
+.claude/skills/fred/scripts/sync_reference_set.sh
+```
+
+(Requires a Google Drive credential in `.env` — see `.env.example`. Edit the
+`MAP` in that script to change the set.)
 
 ## Workflow
 
 1. **Read [`profile.md`](profile.md)** (skim §7 Consistency Checklist + §2/§4/§5
    at minimum). Do not generate from memory.
-2. **Pick reference images.** Choose 2–4 from [`images/`](images/) that match the
-   angle/wardrobe/framing of the scene. Pass them as `reference_images` (up to 9)
-   so Fred stays consistent, and cite them in the prompt as `[Image1]`, `[Image2]`.
-   Convert local files to a Replicate-ready form first:
-   - **If `REPLICATE_API_TOKEN` is set** (see `.env`), upload full-resolution and
-     pass HTTP URLs — best quality, no context cost:
-     ```bash
-     uv run .claude/skills/seedance-video/scripts/upload_to_replicate.py \
-       .claude/skills/fred/images/<one>.webp .claude/skills/fred/images/<two>.webp --json > refs.json
-     ```
-   - **Otherwise** shrink to small inline data URLs (~10–15 KB each):
-     ```bash
-     uv run .claude/skills/seedance-video/scripts/img2datauri.py \
-       .claude/skills/fred/images/<one>.webp .claude/skills/fred/images/<two>.webp --max-bytes 12000 --json > refs.json
-     ```
-   Then pass the resulting URLs/`data:` strings as `reference_images`.
+2. **Fetch the reference set from Drive and prep it for Replicate.** Always use
+   the whole numbered set — no per-scene selection:
+   ```bash
+   # a) download all of fred/reference from Drive to a temp dir (bytes stay on disk)
+   uv run .claude/skills/seedance-video/scripts/drive_download.py \
+     --folder fred/reference --all --dest /tmp/fred-refs
+   # b) upload them to Replicate -> full-res HTTP URLs (only short URLs enter context)
+   uv run .claude/skills/seedance-video/scripts/upload_to_replicate.py \
+     /tmp/fred-refs/*.webp --json > refs.json
+   ```
+   Pass every resulting URL as `reference_images` (Seedance accepts up to 9), and
+   cite them in the prompt as `[Image1] … [Image9]` (01→`[Image1]`, …).
    - Remember: `reference_images` **cannot** be combined with a first-frame
      `image`. For an exact starting frame instead of character transfer, use
      `image` and drop `reference_images`.
+   - No `REPLICATE_API_TOKEN`? Fall back to small inline data URLs with
+     `img2datauri.py --max-bytes 12000` (see the `seedance-video` skill).
 3. **Write the prompt** using the template below, translating the profile into
    concrete visual/audio direction. Put any spoken line in **double quotes** so
    Seedance generates the audio in Fred's voice.
 4. **Generate** with the Replicate MCP `create_models_predictions`
    (`model_owner: "bytedance"`, `model_name: "seedance-2.0"`, no `Prefer: wait`).
-   Poll `get_predictions` until `succeeded`, then download the MP4 into
-   `output/fred/` (see [`seedance-video`](../seedance-video/SKILL.md) for the full
-   call/poll pattern and naming).
+   Poll `get_predictions` until `succeeded`, then save the MP4 to Drive under
+   `fred/output/` (see [`seedance-video`](../seedance-video/SKILL.md) → "Output
+   location" for the download-then-upload pattern and naming).
 5. **Verify against the checklist** (§7 of the profile): mustache present and
    full, wavy swept-back hair, small/narrow chin, leather trousers/boots,
    V-taper (not over-bulked), pen-and-ink crosshatch rendering, detailed Hudson
@@ -75,7 +102,7 @@ editorial-engraving style, high-contrast black and white on aged paper.
 Fred — a tall, heavily-muscled man in his late 30s with a full dark horseshoe
 mustache, wavy dark hair swept up and back, deep-set light eyes under heavy
 brows, a small narrow softly-rounded chin, and broad shoulders tapering to a
-narrow waist (lean athletic V-taper, not bulky) — matching [Image1] and [Image2].
+narrow waist (lean athletic V-taper, not bulky) — matching [Image1]–[Image9].
 He wears [black leather trousers with a wide belt and leather boots + one of:
 white ribbed tank / white tee / rolled-sleeve utility shirt / bare-chested].
 SETTING: [specific Hudson Valley or NYC location — Warren St., The Half Moon,

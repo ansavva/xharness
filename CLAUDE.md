@@ -67,6 +67,7 @@ External tools required by some skills (installed separately, per platform):
 API keys required by some skills:
 - **NYT_API_KEY** — https://developer.nytimes.com/ — required for `nytimes-briefing` and `nytimes-search` (free tier available)
 - **REPLICATE_API_TOKEN** — https://replicate.com/account/api-tokens — optional for `seedance-video`; enables uploading full-resolution reference images. Put keys in a `.env` file at the repo root (copy `.env.example`; `.env` is git-ignored).
+- **Google Drive OAuth** (`GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET` / `GOOGLE_DRIVE_REFRESH_TOKEN`) — required for `seedance-video` / `fred` Drive storage: character **reference images and generated videos live in Google Drive**, not in git. The `drive_upload.py` / `drive_download.py` helpers move bytes disk↔Drive directly. Setup steps are in `.env.example`.
 
 ---
 
