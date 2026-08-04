@@ -21,27 +21,33 @@ warn() { printf '\033[33m[dev-setup]\033[0m %s\n' "$*"; }
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # ---------------------------------------------------------------------------
-# 1. Ensure uv is installed and on PATH.
+# 1. Ensure uv is installed (via Homebrew) and on PATH.
 # ---------------------------------------------------------------------------
-UV_BIN_DIR="${XDG_BIN_HOME:-$HOME/.local/bin}"
-export PATH="$UV_BIN_DIR:$PATH"
+# Make sure a Homebrew install is visible on PATH before we probe for uv —
+# brew's bin isn't always exported yet in a bare non-interactive shell.
+for brew_prefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew; do
+  [ -x "$brew_prefix/bin/brew" ] && export PATH="$brew_prefix/bin:$PATH"
+done
 
 if command -v uv >/dev/null 2>&1; then
   log "uv already installed: $(uv --version)"
-else
-  log "installing uv..."
-  # Official, self-contained installer. UV_NO_MODIFY_PATH keeps it from
-  # editing shell profiles — we manage PATH ourselves (below / via the hook).
-  export UV_NO_MODIFY_PATH=1
-  export INSTALLER_NO_MODIFY_PATH=1
-  curl -LsSf https://astral.sh/uv/install.sh | sh
-  export PATH="$UV_BIN_DIR:$PATH"
+elif command -v brew >/dev/null 2>&1; then
+  # Install uv via Homebrew, matching the documented setup in CLAUDE.md.
+  log "installing uv via Homebrew..."
+  brew install uv
   hash -r 2>/dev/null || true
   log "uv installed: $(uv --version)"
+else
+  warn "uv is not installed and Homebrew is unavailable."
+  warn "Install Homebrew (https://brew.sh) and re-run, or install uv yourself."
+  exit 1
 fi
 
-# Persist uv on PATH for the rest of a Claude Code session, when available.
+# Persist uv's directory on PATH for the rest of a Claude Code session, when
+# available. Derive it from where uv actually resolves rather than assuming a
+# fixed location, so it works with whatever prefix Homebrew used.
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+  UV_BIN_DIR="$(dirname "$(command -v uv)")"
   if ! grep -qs "$UV_BIN_DIR" "$CLAUDE_ENV_FILE" 2>/dev/null; then
     echo "export PATH=\"$UV_BIN_DIR:\$PATH\"" >> "$CLAUDE_ENV_FILE"
     log "added uv bin dir to CLAUDE_ENV_FILE"

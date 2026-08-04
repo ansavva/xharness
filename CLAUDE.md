@@ -43,10 +43,10 @@ xharness/
 scripts/dev-setup.sh
 ```
 
-This installs the only hard prerequisite — `uv` — if it's missing, and warms
-the dependency caches for the cross-platform skills. It's idempotent, so it's
-safe to run any time. `uv` then handles Python versions and dependencies
-automatically per script. (`brew install uv` also works if you prefer.)
+This installs the only hard prerequisite — `uv` — via `brew install uv` if
+it's missing, and warms the dependency caches for the cross-platform skills.
+It's idempotent, so it's safe to run any time. `uv` then handles Python
+versions and dependencies automatically per script.
 
 The script runs automatically at the start of every Claude Code session via
 the `SessionStart` hook registered in `.claude/settings.json`, so remote/web
