@@ -103,3 +103,9 @@ entirely in S3 — nothing in git: `media/fred/profile.md`,
 and `media/fred/originals/`. Read his bible with `uv run $CH show fred`, the
 reference-set captions with `uv run $CH refs fred --captions`, and load the set
 with `uv run $CH refs fred --presign`.
+
+His bible describes his identity independent of medium: **rendering style is a
+per-video choice** (§5 — realistic by default, or the optional illustrated ink
+look), and he is **always described clothed** (strong / tank top / strong arms
+are fine; naked / shirtless / bare-chested are off-brand and trip the render
+content filter).

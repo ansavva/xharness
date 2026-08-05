@@ -57,16 +57,23 @@ the prompt. The gate covers the prompt sent to the model — the surrounding ste
 (presigning references, downloads, uploads, polling) do not need approval. This
 keeps output on-brief and avoids failed/billed renders.
 
-## Content filter (E005) — soften physique, not references
+## Content filter (E005) — it's nudity wording, not strength
 
-Seedance's input filter can reject a prompt with **error E005** ("input or
-output flagged as sensitive"). For muscular / beefcake-idiom characters (e.g.
-Fred), the trigger is usually **explicit physique/anatomical language in the
-prompt** — "lean athletic V-taper, broad shoulders and chest tapering to a
-narrow waist, corded detailed forearms" — **not** whether the reference images
-are clothed. If a render hits E005, first remove anatomical/physique emphasis
-from the prompt (let the reference images carry build); only then reconsider the
-references. A plain wardrobe + face/hair + scene + dialogue prompt passes.
+Seedance's filter can reject a job with **error E005** ("input or output flagged
+as sensitive"). For muscular characters (e.g. Fred) the trigger is **nudity /
+undress language**, not strength or build:
+
+- **Fine:** strong, muscular, broad-shouldered, strong arms, athletic, tank top,
+  fitted shirt — describe the build all you like, as long as he's dressed.
+- **Trips E005:** "naked", "nude", "shirtless", "bare-chested", "bare skin",
+  "undressed", "topless", or any variation. Never use these — always name a
+  garment and let the reference images carry the rest.
+
+If a render still hits E005 with a fully-clothed prompt, the **reference images**
+can be the flag: reference frames showing a lot of skin (bare arms/chest) pushed
+through a photoreal prompt sometimes flag on the *output*. Swap in more-clothed
+reference frames (e.g. button-shirt slots) and resubmit — that resolved it in
+practice. A clothed-wardrobe + face/hair + scene + dialogue prompt passes.
 
 ## Submit with FRESH presigned URLs minted in code (MANDATORY)
 
@@ -240,5 +247,7 @@ on-model character video, load **`studio-character`**: it reads the bible and
 hands you the fixed reference set as ordered presigned URLs; this engine skill is
 character-agnostic.
 
-- **Fred** — the recurring illustrated character (the "Gays of Hudson" series)
-  and the worked example. Record: S3 `media/fred/`. See `studio-character`.
+- **Fred** — the recurring character (the "Gays of Hudson" series) and the worked
+  example. His rendering style is chosen per video (realistic by default, or the
+  optional illustrated ink look — see his bible §5), not fixed. Record: S3
+  `media/fred/`. See `studio-character`.

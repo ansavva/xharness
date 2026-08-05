@@ -106,15 +106,25 @@ own beat. Keep total to `technical.duration` and give ~3 beats per 8s.
 }
 ```
 
-## Approve before sending, and avoid physique language
+## Approve before sending; keep characters clothed; style is optional
 
 - **Show the user the final prompt and get approval before it is rendered.** The
   render engine (`studio-video`) will not submit a prompt to the model until the
   user has approved the exact text; author here, then hand off for that gate.
-- **Don't over-describe a character's physique.** Explicit anatomical/physique
-  wording (V-taper, broad shoulders, corded forearms) can trip Seedance's E005
-  content filter for beefcake-idiom characters — let the reference images carry
-  build. See the content-filter note in `studio-video`.
+- **Describe characters clothed — the trigger is nudity wording, not strength.**
+  It is fine to call a character strong, muscular, broad-shouldered, with strong
+  arms, in a tank top or fitted shirt. What trips Seedance's E005 content filter
+  is **nudity/undress wording** — "naked", "nude", "shirtless", "bare-chested",
+  "bare skin", "undressed", or any variation. Never use those; always name a
+  garment (§4 of the character's bible) and let the reference images carry the
+  rest of the build. See the content-filter note in `studio-video`.
+- **Rendering style is a per-video choice, not baked into a character.** A
+  character's bible describes WHO they are, independent of medium; the look
+  (realistic vs. an illustrated/stylized treatment) is set per video in the
+  `style` field. Default to realistic unless a style is requested — don't copy a
+  character's signature art style into every prompt automatically. Characters
+  that ship optional style presets (e.g. Fred's §5) give ready-to-paste `style`
+  text for each option.
 
 ## Rules the validator enforces (and why)
 
