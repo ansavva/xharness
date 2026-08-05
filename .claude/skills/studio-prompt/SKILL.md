@@ -122,9 +122,28 @@ own beat. Keep total to `technical.duration` and give ~3 beats per 8s.
   character's bible describes WHO they are, independent of medium; the look
   (realistic vs. an illustrated/stylized treatment) is set per video in the
   `style` field. Default to realistic unless a style is requested — don't copy a
-  character's signature art style into every prompt automatically. Characters
-  that ship optional style presets (in their bible's §5) give ready-to-paste
-  `style` text for each option.
+  character's signature art style into every prompt automatically. A character
+  opts into one of the reusable presets below from its bible's §5 rather than
+  defining its own.
+
+## Style presets (reusable, character-agnostic)
+
+`style` is where the render's LOOK is set, per video. These presets are **not
+tied to any character** — drop one into the `style` field of any prompt, and
+combine it with a character's `reference_images` to render that character in that
+look. Add presets here as the workflow grows; this is the single home for shared
+looks.
+
+**Realistic** — the default when no style is requested.
+
+> `"Photorealistic live-action cinematic footage, full color, real human skin and hair, shallow depth of field, natural film grade with warm highlights, subtle grain."`
+
+**Vintage ink comic** — a 1970s underground-comix / editorial-engraving look:
+black-and-white pen-and-ink with heavy spot-blacks, dense cross-hatching and
+stipple shading, high-contrast on aged paper, with occasional selective spot
+color used sparingly for a joke or a signal.
+
+> `"Vintage pen-and-ink comic illustration, bold variable-weight linework, dense cross-hatching and stipple shading, heavy spot-blacks, high-contrast black and white on aged paper with occasional selective spot color."`
 
 ## Rules the validator enforces (and why)
 

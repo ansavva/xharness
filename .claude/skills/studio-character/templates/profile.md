@@ -57,10 +57,13 @@ list the garments so prompts can name one.
 ## 5. Rendering — choose per video (optional style)
 
 Identity is style-agnostic; rendering is a per-video choice set in the prompt's
-`style` field. Give a **default (usually realistic)** and, if the character has a
-signature stylized look, an **optional** preset for it — each with ready-to-paste
-`style` text. Also note framing/format and background rules (which apply in
-either style). Do NOT force a single art style as part of identity.
+`style` field. Point at the reusable presets in the `studio-prompt` skill
+(`## Style presets`): name the character's **default** (usually `Realistic`) and,
+if it has a signature stylized look, the **optional** preset it opts into. If that
+signature look isn't in the skill yet, add it there (it's the shared home for
+looks) rather than defining it only here. Also note framing/format and background
+rules (which apply in either style). Do NOT force a single art style as part of
+identity.
 
 ---
 
