@@ -34,9 +34,8 @@ media/<name>/output/          rendered videos (written by studio-video)
 ```
 
 `profile.md` is canonical in S3 (edit it via this skill). A **blank template** is
-in [`templates/profile.md`](templates/profile.md); a **fully worked example** is
-in [`examples/fred/profile.md`](examples/fred/profile.md) — read it before
-writing a new bible.
+in [`templates/profile.md`](templates/profile.md); for a **fully worked example**,
+read Fred's live bible from S3 (`uv run $CH show fred`) before writing a new one.
 
 ## The management tool
 
@@ -87,7 +86,7 @@ sets an explicit start. The number is the `[ImageN]` slot the prompt cites.
 ## Adding a new character
 
 1. Write the bible from [`templates/profile.md`](templates/profile.md) (use
-   [`examples/fred/profile.md`](examples/fred/profile.md) as the gold standard).
+   Fred's live bible, `uv run $CH show fred`, as the gold standard).
 2. `uv run $CH create <name> --from-profile <your-bible.md>`.
 3. `uv run $CH add-refs <name> <curated images…>` — the numbered set used on
    every generation. Archive all source images under `media/<name>/originals/`
@@ -98,10 +97,9 @@ No new skill directory — ever. The character is now usable by the whole pipeli
 
 ## Fred
 
-Fred is the worked example (the "Gays of Hudson" series). His full record already
-lives in S3: `media/fred/profile.md`, `media/fred/reference/fred_1..9.webp`, and
-`media/fred/originals/`. His bible is committed at
-[`examples/fred/profile.md`](examples/fred/profile.md) as the template gold
-standard; the reference-set composition is documented in
-[`examples/fred/README.md`](examples/fred/README.md). Use him with the normal
-flow: `uv run $CH show fred`, `uv run $CH refs fred --presign`.
+Fred is the worked example (the "Gays of Hudson" series). His full record lives
+entirely in S3 — nothing in git: `media/fred/profile.md`,
+`media/fred/reference/fred_1..9.webp` (each with a `fred_N.txt` caption sidecar),
+and `media/fred/originals/`. Read his bible with `uv run $CH show fred`, the
+reference-set captions with `uv run $CH refs fred --captions`, and load the set
+with `uv run $CH refs fred --presign`.

@@ -12,11 +12,13 @@ image set changes to refresh the sheet.
 Two sources:
 
   # pull a character folder straight from S3 (media/<char>/<folder>/)
-  uv run contact_sheet.py --character fred --folder originals \
-      --out .claude/skills/studio-character/examples/fred/originals_contact.png
+  uv run contact_sheet.py --character fred --folder originals --out /tmp/fred_originals.png
 
   # or build from a local directory of images already on disk
   uv run contact_sheet.py --src /path/to/images --out /tmp/sheet.png
+
+Write the sheet to a scratch/temp path — contact sheets of character images are
+not kept in source control.
 
 Images are laid out in natural-sorted order (fred_1, fred_2, … fred_10) so tile
 position is stable across runs. --cols / --cell tune the grid.
