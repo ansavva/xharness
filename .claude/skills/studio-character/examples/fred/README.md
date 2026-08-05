@@ -32,22 +32,34 @@ uv run $CH refs fred --presign --json   # ordered signed URLs -> reference_image
 
 Fred always generates from the **same nine images**, passed IN FULL as
 `reference_images` every time. Order defines the `[Image1]…[Image9]` slots
-(`fred_1` → `[Image1]`, …):
+(`fred_1` → `[Image1]`, …).
 
-| slot | file | What it anchors |
-|---|---|---|
-| 1 | fred_1 | Face close-up — mustache, hair, brow, chin |
-| 2 | fred_2 | Shirtless front (meditation) — face + torso, V-taper, chest hair |
-| 3 | fred_3 | Full body, shirtless + jeans — proportions |
-| 4 | fred_4 | Seated, white tee + leather pants — canonical wardrobe |
-| 5 | fred_5 | Walking, button shirt + jeans — clothed full body + demeanor |
-| 6 | fred_6 | Porch reading, shirtless + leather — pen-and-ink style |
-| 7 | fred_7 | Driving, white tank — arms/forearms + 3/4 face |
-| 8 | fred_8 | City, white button shirt + leather — clothed full body (alt) |
-| 9 | fred_9 | Shaving close-up — mustache detail |
+Each image carries a same-named **`.txt` sidecar** in S3
+(`media/fred/reference/fred_N.txt`) describing what it contains, so the set is
+self-documenting — no need to consult this README to know a slot's contents.
+Read them straight from S3:
 
-To re-curate the set, re-upload from the originals archive with
-`character.py add-refs fred <images…> --replace` (renumbers from 1).
+```bash
+CH=.claude/skills/studio-character/scripts/character.py
+uv run $CH refs fred --captions        # each slot + its sidecar caption
+```
+
+`refs --presign` / `--dest` only ever return the image objects; the `.txt`
+sidecars are metadata and are filtered out of the reference frames. To re-curate,
+re-upload from the originals archive with
+`character.py add-refs fred <images…> --replace` (renumbers from 1), and add a
+matching `fred_N.txt` per image. A labeled contact sheet of any folder can be
+regenerated with [`../../scripts/contact_sheet.py`](../../scripts/contact_sheet.py):
+
+```bash
+CS=.claude/skills/studio-character/scripts/contact_sheet.py
+uv run $CS --character fred --folder originals  --out .claude/skills/studio-character/examples/fred/originals_contact.png
+uv run $CS --character fred --folder reference  --out .claude/skills/studio-character/examples/fred/reference_contact.png
+```
+
+The current sheets live beside this file: [`originals_contact.png`](originals_contact.png)
+(the 26-image archive) and [`reference_contact.png`](reference_contact.png) (the
+curated 9). Refresh them whenever the sets change.
 
 ## Defaults for Fred videos
 

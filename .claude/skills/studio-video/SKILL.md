@@ -48,7 +48,52 @@ Key constraint: **`image`/`last_frame_image` and `reference_images` are mutually
 exclusive.** Use `image` for a specific first frame; use `reference_images` when
 you want a character/style carried across a freshly composed scene.
 
-## How to generate a video
+## Prompt approval gate (MANDATORY)
+
+**Before submitting any prompt to the model, show the user the exact final
+prompt text and wait for their explicit approval. Do not call
+`create_models_predictions` until they say yes.** Re-approve after any edit to
+the prompt. The gate covers the prompt sent to the model — the surrounding steps
+(presigning references, downloads, uploads, polling) do not need approval. This
+keeps output on-brief and avoids failed/billed renders.
+
+## Content filter (E005) — soften physique, not references
+
+Seedance's input filter can reject a prompt with **error E005** ("input or
+output flagged as sensitive"). For muscular / beefcake-idiom characters (e.g.
+Fred), the trigger is usually **explicit physique/anatomical language in the
+prompt** — "lean athletic V-taper, broad shoulders and chest tapering to a
+narrow waist, corded detailed forearms" — **not** whether the reference images
+are clothed. If a render hits E005, first remove anatomical/physique emphasis
+from the prompt (let the reference images carry build); only then reconsider the
+references. A plain wardrobe + face/hair + scene + dialogue prompt passes.
+
+## Submit with FRESH presigned URLs minted in code (MANDATORY)
+
+**Never hand-paste presigned reference URLs into a prediction call, and never
+reuse presigned URLs across calls.** They are ~2 KB each, expire, and a single
+mistyped character yields a 400/expired fetch and a dead (often billed) render.
+Instead, **mint fresh presigned URLs from code at the moment you submit**, using
+the existing presign code, and submit in the same step.
+
+Use the helper — it presigns the character's reference set fresh and POSTs the
+prediction directly to the Replicate HTTP API (needs `REPLICATE_API_TOKEN`), so
+no URL passes through the agent context:
+
+```bash
+# input.json = the built `input` object WITHOUT reference_images
+#   (studio-prompt: build_prompt.py prompt.json --emit input  → the .input object)
+set -a; . ./.env; set +a
+uv run .claude/skills/studio-video/scripts/submit_prediction.py \
+  --input-file input.json --character fred --slots 1,2,3,6 --poll
+```
+
+The helper always mints references fresh (it deletes any `reference_images` baked
+into the input file first). `--slots` picks which reference numbers map to
+`[Image1..N]` in order; omit it to use the whole set. Only fall back to the MCP
+`create_models_predictions` tool for a job with no reference images at all.
+
+## How to generate a video (MCP fallback, no references)
 
 Use the Replicate MCP tool `create_models_predictions` with
 `model_owner: "bytedance"`, `model_name: "seedance-2.0"`, and an `input` object.

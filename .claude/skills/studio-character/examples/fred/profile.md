@@ -2,6 +2,11 @@
 
 *Reference bible for the "Gays of Hudson" illustrated series. Built from 26 reference images.*
 
+> **Fred is a completely fictional character — not a real person.** He is an
+> original illustrated creation for the "Gays of Hudson" series. Any resemblance
+> to any actual person, living or dead, is coincidental. He does not depict, and
+> must not be presented as, a real individual.
+
 ---
 
 ## 1. At a Glance
