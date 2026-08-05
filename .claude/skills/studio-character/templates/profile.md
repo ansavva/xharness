@@ -3,7 +3,7 @@
 *Reference bible for on-model video generation. Built from <N> reference images.*
 *This is the character's SOURCE OF TRUTH — it lives in S3 (`characters/<name>/profile.md`)*
 *and is wired into every generation. Fill every section with concrete, observable detail;*
-*avoid mood words. Run `character.py show fred` for a fully worked example.*
+*avoid mood words. Run `character.py show <name>` on an existing character for a fully worked example.*
 
 > **Describe WHO the character is, independent of medium.** Rendering style
 > (realistic vs. an illustrated/stylized look) is a **per-video choice** — put it

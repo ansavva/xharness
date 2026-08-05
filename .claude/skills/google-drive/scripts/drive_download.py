@@ -18,22 +18,22 @@ Auth comes from `.env` (see .env.example / drive_common.py).
 Usage:
     S=.claude/skills/google-drive/scripts/drive_download.py
 
-    # List what's in xharness/fred/images (names + ids + sizes)
-    uv run $S --folder fred/images --list
+    # List what's in xharness/<name>/images (names + ids + sizes)
+    uv run $S --folder <name>/images --list
 
     # Download two named references into a temp dir
-    uv run $S --folder fred/images --dest /tmp/fredrefs \
+    uv run $S --folder <name>/images --dest /tmp/<name>refs \
         683523122_18079820546271388_4037734638954238058_n.webp \
         724019867_18086722952271388_6684886234545379331_n.webp
 
     # Download EVERYTHING in the folder
-    uv run $S --folder fred/images --dest /tmp/fredrefs --all
+    uv run $S --folder <name>/images --dest /tmp/<name>refs --all
 
     # JSON map {name: local_path} for scripting the ref pipeline
-    uv run $S --folder fred/images --dest /tmp/fredrefs --all --json
+    uv run $S --folder <name>/images --dest /tmp/<name>refs --all --json
 
 Options:
-    --folder PATH   Source folder path under the root, e.g. "fred/images" (required)
+    --folder PATH   Source folder path under the root, e.g. "<name>/images" (required)
     --dest DIR      Local directory to download into (default: current dir)
     --all           Download every file in the folder
     --list          Print the folder contents and exit (no download)
@@ -56,7 +56,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Download files from a Google Drive folder.")
     ap.add_argument("names", nargs="*", help="Specific file names to download")
     ap.add_argument("--folder", required=True,
-                    help="Source folder path under the root, e.g. 'fred/images'")
+                    help="Source folder path under the root, e.g. '<name>/images'")
     ap.add_argument("--dest", type=Path, default=Path("."), help="Local download directory")
     ap.add_argument("--all", action="store_true", help="Download every file in the folder")
     ap.add_argument("--list", action="store_true", help="List folder contents and exit")

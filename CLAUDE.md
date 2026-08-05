@@ -112,7 +112,7 @@ remains in the repo but is **legacy** (the workflow moved off Drive to S3).
 | `nytimes-search`   | Keyword article search with date filters and sort order (requires `NYT_API_KEY`) |
 | `studio-video`     | **[studio-*]** Generate videos with ByteDance Seedance 2.0 via the Replicate MCP (text/image/character → MP4); the render engine |
 | `studio-prompt`    | **[studio-*]** Author Seedance 2.0 prompts as structured JSON (validates rules, splits technical fields to API params); feeds `studio-video` |
-| `studio-character` | **[studio-*]** Manage on-model characters (create/update/list/load) whose bible + reference images live in S3 (`media/<name>/`); characters are data, not skills (Fred is the worked example) |
+| `studio-character` | **[studio-*]** Manage on-model characters (create/update/list/load) whose bible + reference images live in S3 (`media/<name>/`); characters are data, not skills |
 | `s3`               | Read/write the `xharness-assets` S3 bucket (list, upload, download, presign) — the video workflow's asset store |
 | `google-drive`     | *Legacy* — Read/write Google Drive via the REST API (superseded by `s3` for the video workflow) |
 
@@ -138,7 +138,7 @@ uv run .claude/skills/photos/scripts/scan.py scan-takeout /path/to/takeout
 uv run .claude/skills/kindle/scripts/kindle.py /path/to/book.pdf
 uv run .claude/skills/nytimes-briefing/scripts/nytimes.py briefing
 uv run .claude/skills/nytimes-search/scripts/search.py "climate change"
-uv run .claude/skills/s3/scripts/s3_presign.py --folder fred/reference --json
+uv run .claude/skills/s3/scripts/s3_presign.py --folder <name>/reference --json
 ```
 
 For multi-file skills (like `photos`), only the entry script needs the

@@ -170,7 +170,7 @@ def create_folder(token: str, name: str, parent_id: str) -> str:
 
 def resolve_folder_path(token: str, path: str, *, create: bool, root: str | None = None) -> str:
     """
-    Resolve a slash-separated folder path (e.g. "fred/images") under the
+    Resolve a slash-separated folder path (e.g. "<name>/images") under the
     configured root folder (default "xharness") in My Drive. With create=True,
     missing folders are created; otherwise a missing folder is an error.
 

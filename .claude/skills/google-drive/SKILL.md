@@ -12,7 +12,7 @@ general-purpose — any skill or task can call these scripts.
 
 Everything is stored under a single **root folder** in the credential owner's
 *My Drive* (default `xharness`, override with `GOOGLE_DRIVE_ROOT_FOLDER`). Paths
-are slash-separated *under* that root, e.g. `fred/reference`.
+are slash-separated *under* that root, e.g. `<name>/reference`.
 
 ## Setup (one time)
 
@@ -66,13 +66,13 @@ specific `.env`.
 GD=.claude/skills/google-drive/scripts
 
 # List a folder
-uv run $GD/drive_download.py --folder fred/reference --list
+uv run $GD/drive_download.py --folder <name>/reference --list
 
 # Download everything in a folder to a temp dir (JSON map of name -> local path)
-uv run $GD/drive_download.py --folder fred/reference --all --dest /tmp/refs --json
+uv run $GD/drive_download.py --folder <name>/reference --all --dest /tmp/refs --json
 
 # Upload files into a folder path (folder auto-created)
-uv run $GD/drive_upload.py --folder fred/output output/fred/clip.mp4
+uv run $GD/drive_upload.py --folder <name>/output output/<name>/clip.mp4
 
 # One-command OAuth (writes the refresh token to .env)
 uv run $GD/drive_auth.py

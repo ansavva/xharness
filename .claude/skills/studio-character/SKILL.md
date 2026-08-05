@@ -1,6 +1,6 @@
 ---
 name: studio-character
-description: Manage on-model characters (like "Fred") for video generation — create, update, list, and load a character whose profile bible and reference images live in the xharness-assets S3 bucket. Use whenever a video request names a known/recurring character, or the user wants to add, edit, curate, or inspect one. A character is DATA (an S3 record under media/<name>/), not a per-character skill: this one skill manages them all and wires a character's profile + reference set into the studio-prompt / studio-video pipeline so output stays recognizable.
+description: Manage on-model characters for video generation — create, update, list, and load a character whose profile bible and reference images live in the xharness-assets S3 bucket. Use whenever a video request names a known/recurring character, or the user wants to add, edit, curate, or inspect one. A character is DATA (an S3 record under media/<name>/), not a per-character skill: this one skill manages them all and wires a character's profile + reference set into the studio-prompt / studio-video pipeline so output stays recognizable.
 ---
 
 # studio-character
@@ -28,14 +28,16 @@ login`). The layout matches the existing media tree:
 ```
 media/<name>/profile.md      the character bible — SOURCE OF TRUTH
 media/<name>/reference/       curated set, <name>_1.<ext> … <name>_N.<ext>
-                              (used IN FULL on every generation)
+                              (used IN FULL on every generation; optional
+                              <name>_N.txt caption sidecars, shown by `refs --captions`)
 media/<name>/originals/       optional archive to re-curate the set from
 media/<name>/output/          rendered videos (written by studio-video)
 ```
 
 `profile.md` is canonical in S3 (edit it via this skill). A **blank template** is
 in [`templates/profile.md`](templates/profile.md); for a **fully worked example**,
-read Fred's live bible from S3 (`uv run $CH show fred`) before writing a new one.
+read an existing character's live bible from S3 (`uv run $CH show <name>`) before
+writing a new one.
 
 ## The management tool
 
@@ -48,12 +50,12 @@ in the agent context. Requires an `aws login` (see the `s3` skill).
 CH=.claude/skills/studio-character/scripts/character.py
 
 uv run $CH list                                  # every character
-uv run $CH show fred                             # print fred's profile.md (from S3)
-uv run $CH create nova --from-profile /tmp/nova.md   # new character record
-uv run $CH set-profile nova /tmp/nova.md         # replace the bible
-uv run $CH add-refs nova /tmp/nova/*.webp        # add refs, numbered nova_1..N
-uv run $CH refs fred --presign --json            # generation-time: ordered signed URLs
-uv run $CH refs fred --dest /tmp/fred-refs       # or download the set locally
+uv run $CH show <name>                           # print a character's profile.md (from S3)
+uv run $CH create <name> --from-profile /tmp/<name>.md   # new character record
+uv run $CH set-profile <name> /tmp/<name>.md     # replace the bible
+uv run $CH add-refs <name> /tmp/<name>/*.webp    # add refs, numbered <name>_1..N
+uv run $CH refs <name> --presign --json          # generation-time: ordered signed URLs
+uv run $CH refs <name> --dest /tmp/<name>-refs   # or download the set locally
 ```
 
 `add-refs` numbers new images `<name>_<n>` continuing after the current highest
@@ -85,8 +87,8 @@ sets an explicit start. The number is the `[ImageN]` slot the prompt cites.
 
 ## Adding a new character
 
-1. Write the bible from [`templates/profile.md`](templates/profile.md) (use
-   Fred's live bible, `uv run $CH show fred`, as the gold standard).
+1. Write the bible from [`templates/profile.md`](templates/profile.md) (read an
+   existing character's live bible, `uv run $CH show <name>`, as a reference).
 2. `uv run $CH create <name> --from-profile <your-bible.md>`.
 3. `uv run $CH add-refs <name> <curated images…>` — the numbered set used on
    every generation. Archive all source images under `media/<name>/originals/`
@@ -95,17 +97,16 @@ sets an explicit start. The number is the `[ImageN]` slot the prompt cites.
 No new skill directory — ever. The character is now usable by the whole pipeline.
 (Names are lowercase `[a-z0-9_-]`; `misc` is reserved for non-character output.)
 
-## Fred
+## A bible describes identity, not a fixed look
 
-Fred is the worked example (the "Gays of Hudson" series). His full record lives
-entirely in S3 — nothing in git: `media/fred/profile.md`,
-`media/fred/reference/fred_1..9.webp` (each with a `fred_N.txt` caption sidecar),
-and `media/fred/originals/`. Read his bible with `uv run $CH show fred`, the
-reference-set captions with `uv run $CH refs fred --captions`, and load the set
-with `uv run $CH refs fred --presign`.
+A character record is medium-agnostic on purpose:
 
-His bible describes his identity independent of medium: **rendering style is a
-per-video choice** (§5 — realistic by default, or the optional illustrated ink
-look), and he is **always described clothed** (strong / tank top / strong arms
-are fine; naked / shirtless / bare-chested are off-brand and trip the render
-content filter).
+- **Rendering style is a per-video choice.** The bible captures WHO the character
+  is (face, build, wardrobe, voice); the look (realistic vs. a stylized/illustrated
+  treatment) is set per video in the prompt's `style` field. Default to realistic
+  unless a style is requested, and give any signature stylized look as an optional
+  §5 preset rather than baking it into identity.
+- **Describe characters clothed.** Strength and wardrobe words (strong, muscular,
+  tank top, strong arms) are fine; nudity/undress wording (naked, shirtless,
+  bare-chested, undressed) is off-brand and trips the render content filter — name
+  a garment instead. See `studio-prompt` and `studio-video` for the filter details.

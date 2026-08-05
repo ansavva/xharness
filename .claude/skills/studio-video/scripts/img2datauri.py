@@ -26,16 +26,16 @@ Usage (via uv — no venv or manual install needed):
     S=.claude/skills/studio-video/scripts/img2datauri.py
 
     # Print one data URL to stdout
-    uv run $S /tmp/fred-refs/fred_1.webp
+    uv run $S /tmp/<name>-refs/<name>_1.webp
 
     # Write the data URL to a .txt sidecar instead of stdout
-    uv run $S /tmp/fred-refs/fred_1.webp --out some.datauri.txt
+    uv run $S /tmp/<name>-refs/<name>_1.webp --out some.datauri.txt
 
     # Several images -> JSON map {path: data_url}, ready to paste as reference_images
-    uv run $S /tmp/fred-refs/*.webp --json > refs.json
+    uv run $S /tmp/<name>-refs/*.webp --json > refs.json
 
     # Also drop compressed image files you can commit / host later
-    uv run $S /tmp/fred-refs/*.webp --save-dir output/compressed
+    uv run $S /tmp/<name>-refs/*.webp --save-dir output/compressed
 
 Options:
     --max-bytes N   Budget for the data-URL string in bytes (default 262144 = 256 KiB)

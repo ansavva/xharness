@@ -25,17 +25,17 @@ _REFRESH_TOKEN.
 Usage:
     S=.claude/skills/google-drive/scripts/drive_upload.py
 
-    # One file -> the Drive folder xharness/fred/output
-    uv run $S --folder fred/output output/fred/clip.mp4
+    # One file -> the Drive folder xharness/<name>/output
+    uv run $S --folder <name>/output output/<name>/clip.mp4
 
-    # Many files (e.g. Fred's numbered reference set) -> xharness/fred/reference
-    uv run $S --folder fred/reference /tmp/fred-refs/*.webp
+    # Many files (e.g. a character's numbered reference set) -> xharness/<name>/reference
+    uv run $S --folder <name>/reference /tmp/<name>-refs/*.webp
 
     # JSON map {local_path: {id, name, webViewLink}} for scripting
-    uv run $S --folder fred/images ref1.webp ref2.webp --json
+    uv run $S --folder <name>/images ref1.webp ref2.webp --json
 
 Options:
-    --folder PATH   Destination folder path under the root (required), e.g. "fred/images"
+    --folder PATH   Destination folder path under the root (required), e.g. "<name>/images"
     --json          Emit a JSON object mapping local path -> uploaded file info
     --env PATH      Explicit path to a .env file holding the credential
     --quiet         Suppress the per-file report on stderr
@@ -54,7 +54,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="Upload local files to a Google Drive folder.")
     ap.add_argument("files", nargs="+", type=Path, help="Local file(s) to upload")
     ap.add_argument("--folder", required=True,
-                    help="Destination folder path under the root, e.g. 'fred/images'")
+                    help="Destination folder path under the root, e.g. '<name>/images'")
     ap.add_argument("--json", action="store_true", help="Emit JSON map {path: file_info}")
     ap.add_argument("--env", type=Path, help="Explicit path to a .env file")
     ap.add_argument("--quiet", action="store_true", help="Suppress per-file report on stderr")

@@ -29,9 +29,6 @@ variable "seed_prefixes" {
   EOT
   type        = list(string)
   default = [
-    "fred/reference/",
-    "fred/originals/",
-    "fred/output/",
     "misc/output/",
   ]
 }

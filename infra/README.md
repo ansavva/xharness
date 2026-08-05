@@ -33,9 +33,9 @@ sub-paths, **same file names**:
 
 ```
 Google Drive                     S3
-xharness/fred/reference/fred_1.webp   →  s3://xharness-assets/media/fred/reference/fred_1.webp
-xharness/fred/originals/fred_1.webp   →  s3://xharness-assets/media/fred/originals/fred_1.webp
-xharness/fred/output/<clip>.mp4       →  s3://xharness-assets/media/fred/output/<clip>.mp4
+xharness/<name>/reference/<name>_1.webp   →  s3://xharness-assets/media/<name>/reference/<name>_1.webp
+xharness/<name>/originals/<name>_1.webp   →  s3://xharness-assets/media/<name>/originals/<name>_1.webp
+xharness/<name>/output/<clip>.mp4       →  s3://xharness-assets/media/<name>/output/<clip>.mp4
 xharness/misc/output/<clip>.mp4       →  s3://xharness-assets/media/misc/output/<clip>.mp4
 ```
 
@@ -65,11 +65,11 @@ for the duration of the job:
 
 ```bash
 # reference image → temporary HTTPS URL Replicate can fetch (1 h)
-aws s3 presign s3://xharness-assets/media/fred/reference/fred_1.webp --expires-in 3600
+aws s3 presign s3://xharness-assets/media/<name>/reference/<name>_1.webp --expires-in 3600
 
 # upload a local file into the media tree
-aws s3 cp ./fred_1.webp s3://xharness-assets/media/fred/reference/fred_1.webp
+aws s3 cp ./<name>_1.webp s3://xharness-assets/media/<name>/reference/<name>_1.webp
 
 # download a generated video back out
-aws s3 cp s3://xharness-assets/media/fred/output/clip.mp4 ./clip.mp4
+aws s3 cp s3://xharness-assets/media/<name>/output/clip.mp4 ./clip.mp4
 ```

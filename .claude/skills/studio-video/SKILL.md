@@ -16,10 +16,10 @@ The family:
   action / scene / lighting / style / audio, multi-shot timelines). Its `input`
   object drops straight into the call below. Use it for tight or repeatable
   control; plain prose is fine for a quick one-off.
-- **`studio-character`** — for a video of a known/recurring character (e.g.
-  Fred): it supplies the character's bible and the reference images this engine
-  requires. **FIRST load `studio-character`** — never generate a character from a
-  text prompt alone (see "Reference images are MANDATORY" below).
+- **`studio-character`** — for a video of a known/recurring character: it
+  supplies the character's bible and the reference images this engine requires.
+  **FIRST load `studio-character`** — never generate a character from a text
+  prompt alone (see "Reference images are MANDATORY" below).
 - **`s3`** — the `xharness-assets` asset store references and outputs live in.
 
 ## The model: `bytedance/seedance-2.0`
@@ -60,8 +60,8 @@ keeps output on-brief and avoids failed/billed renders.
 ## Content filter (E005) — it's nudity wording, not strength
 
 Seedance's filter can reject a job with **error E005** ("input or output flagged
-as sensitive"). For muscular characters (e.g. Fred) the trigger is **nudity /
-undress language**, not strength or build:
+as sensitive"). For muscular characters the trigger is **nudity / undress
+language**, not strength or build:
 
 - **Fine:** strong, muscular, broad-shouldered, strong arms, athletic, tank top,
   fitted shirt — describe the build all you like, as long as he's dressed.
@@ -92,7 +92,7 @@ no URL passes through the agent context:
 #   (studio-prompt: build_prompt.py prompt.json --emit input  → the .input object)
 set -a; . ./.env; set +a
 uv run .claude/skills/studio-video/scripts/submit_prediction.py \
-  --input-file input.json --character fred --slots 1,2,3,6 --poll
+  --input-file input.json --character <character> --slots 1,2,3,6 --poll
 ```
 
 The helper always mints references fresh (it deletes any `reference_images` baked
@@ -130,17 +130,17 @@ The flow is download-then-upload — Replicate's output URL → a local staging 
 
 ```bash
 # 1) stage the render locally (output/ is git-ignored)
-mkdir -p output/fred
+mkdir -p output/<character>
 NAME="$(date +%Y-%m-%d_%H-%M-%S)_<slug>.mp4"
-curl -sL "<output_url>" -o "output/fred/$NAME"
+curl -sL "<output_url>" -o "output/<character>/$NAME"
 
-# 2) upload the staged file to S3 (media/fred/output/) — s3 skill
+# 2) upload the staged file to S3 (media/<character>/output/) — s3 skill
 uv run .claude/skills/s3/scripts/s3_upload.py \
-  --folder fred/output "output/fred/$NAME"
+  --folder <character>/output "output/<character>/$NAME"
 ```
 
 Report the `s3://` URI that `s3_upload.py` prints (add `--presign` for a
-shareable HTTPS link). The local `output/fred/` copy is just staging; S3 is the
+shareable HTTPS link). The local `output/<character>/` copy is just staging; S3 is the
 canonical store. Uploading needs an AWS login (`aws login`; see the `s3` skill);
 without one, leave the file in `output/` and tell the user it wasn't pushed to S3.
 
@@ -181,14 +181,14 @@ is needed for references.
 
 ```bash
 # References for a character — ordered presigned URLs (via studio-character)
-uv run .claude/skills/studio-character/scripts/character.py refs fred --presign --json > refs.json
+uv run .claude/skills/studio-character/scripts/character.py refs <character> --presign --json > refs.json
 # equivalently, straight from the s3 skill:
-uv run .claude/skills/s3/scripts/s3_presign.py --folder fred/reference --json > refs.json
-# -> [{ "key": "media/fred/reference/fred_1.webp", "url": "https://..." }, ...]
-# Pass the .url values as reference_images; fred_1 -> [Image1], fred_2 -> [Image2], ...
+uv run .claude/skills/s3/scripts/s3_presign.py --folder <character>/reference --json > refs.json
+# -> [{ "key": "media/<character>/reference/<character>_1.webp", "url": "https://..." }, ...]
+# Pass the .url values as reference_images; <character>_1 -> [Image1], <character>_2 -> [Image2], ...
 
 # After rendering: upload the finished MP4 to S3 (s3 skill)
-uv run .claude/skills/s3/scripts/s3_upload.py --folder fred/output output/fred/<name>.mp4
+uv run .claude/skills/s3/scripts/s3_upload.py --folder <character>/output output/<character>/<name>.mp4
 ```
 
 Fallbacks for ad-hoc **local** images not in S3 (the Replicate-side helpers live
@@ -245,9 +245,6 @@ manages them all, and each one is an S3 record (`media/<name>/` with a
 `profile.md` bible, a numbered `reference/` set, and `output/`). To generate an
 on-model character video, load **`studio-character`**: it reads the bible and
 hands you the fixed reference set as ordered presigned URLs; this engine skill is
-character-agnostic.
-
-- **Fred** — the recurring character (the "Gays of Hudson" series) and the worked
-  example. His rendering style is chosen per video (realistic by default, or the
-  optional illustrated ink look — see his bible §5), not fixed. Record: S3
-  `media/fred/`. See `studio-character`.
+character-agnostic. A character's rendering style is chosen per video (realistic
+by default, or an optional stylized look from its bible §5), not fixed by the
+engine.

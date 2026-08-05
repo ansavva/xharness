@@ -4,15 +4,15 @@
 # ///
 """Build a labeled contact sheet (grid of thumbnails) for a character's images.
 
-Every tile is captioned with the image's basename (e.g. ``fred_3``) so a set of
+Every tile is captioned with the image's basename (e.g. ``<name>_3``) so a set of
 reference / original images can be eyeballed at a glance — which pose, which
-wardrobe, shirt on or off — without opening each file. Re-run it whenever the
+wardrobe — without opening each file. Re-run it whenever the
 image set changes to refresh the sheet.
 
 Two sources:
 
   # pull a character folder straight from S3 (media/<char>/<folder>/)
-  uv run contact_sheet.py --character fred --folder originals --out /tmp/fred_originals.png
+  uv run contact_sheet.py --character <name> --folder originals --out /tmp/<name>_originals.png
 
   # or build from a local directory of images already on disk
   uv run contact_sheet.py --src /path/to/images --out /tmp/sheet.png
@@ -20,7 +20,7 @@ Two sources:
 Write the sheet to a scratch/temp path — contact sheets of character images are
 not kept in source control.
 
-Images are laid out in natural-sorted order (fred_1, fred_2, … fred_10) so tile
+Images are laid out in natural-sorted order (<name>_1, <name>_2, … <name>_10) so tile
 position is stable across runs. --cols / --cell tune the grid.
 """
 import argparse

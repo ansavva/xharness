@@ -4,8 +4,8 @@
 # ///
 """Upload local file(s) into the media tree of the xharness-assets bucket.
 
-  uv run .../s3_upload.py --folder fred/output output/fred/clip.mp4
-  uv run .../s3_upload.py --folder fred/reference img/*.webp --presign --json
+  uv run .../s3_upload.py --folder <name>/output output/<name>/clip.mp4
+  uv run .../s3_upload.py --folder <name>/reference img/*.webp --presign --json
 
 Each file goes to  s3://<bucket>/media/<folder>/<basename>  (same-named keys are
 overwritten; the bucket is versioned so prior revisions are retained). Prints the
@@ -31,7 +31,7 @@ def content_type(path: str) -> str:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--folder", required=True, help="Destination path under media/ (e.g. fred/output).")
+    ap.add_argument("--folder", required=True, help="Destination path under media/ (e.g. <name>/output).")
     ap.add_argument("files", nargs="+", help="Local file(s) to upload.")
     ap.add_argument("--presign", action="store_true", help="Also emit a temporary HTTPS URL per file.")
     ap.add_argument("--expires", type=int, default=3600, help="Presign expiry in seconds (default 3600).")

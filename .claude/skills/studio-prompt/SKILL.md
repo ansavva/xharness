@@ -18,7 +18,7 @@ timeline, or a template they can tweak. For a quick one-off, plain prose through
 `studio-video` is fine — don't force JSON on everything.
 
 > **Character videos:** JSON controls the *words*; it does **not** replace
-> reference images. If the request names a known character (e.g. Fred), still
+> reference images. If the request names a known character, still
 > load **`studio-character`** and pass its `reference_images` — identity comes
 > from references, motion/framing from this JSON. Reference them in the text as
 > `[Image1]`, `[Image2]`, … inside the relevant JSON field.
@@ -123,8 +123,8 @@ own beat. Keep total to `technical.duration` and give ~3 beats per 8s.
   (realistic vs. an illustrated/stylized treatment) is set per video in the
   `style` field. Default to realistic unless a style is requested — don't copy a
   character's signature art style into every prompt automatically. Characters
-  that ship optional style presets (e.g. Fred's §5) give ready-to-paste `style`
-  text for each option.
+  that ship optional style presets (in their bible's §5) give ready-to-paste
+  `style` text for each option.
 
 ## Rules the validator enforces (and why)
 
