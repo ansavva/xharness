@@ -181,11 +181,39 @@ def cmd_add_refs(args, s3) -> None:
     )
 
 
+IMG_EXTS = {".webp", ".png", ".jpg", ".jpeg", ".gif", ".bmp"}
+
+
+def _sidecar_caption(s3, image_key: str) -> str:
+    """Text of the <basename>.txt sidecar next to an image key, or '' if none."""
+    txt_key = os.path.splitext(image_key)[0] + ".txt"
+    try:
+        return s3.get_object(Bucket=s3c.BUCKET, Key=txt_key)["Body"].read().decode("utf-8").strip()
+    except s3.exceptions.NoSuchKey:
+        return ""
+    except Exception:  # noqa: BLE001
+        return ""
+
+
 def cmd_refs(args, s3) -> None:
     check_name(args.name)
-    keys = s3c.list_prefix(s3, f"{args.name}/reference")  # natural-sorted
+    all_keys = s3c.list_prefix(s3, f"{args.name}/reference")  # natural-sorted
+    # Only images are reference frames; .txt sidecars (captions) are metadata.
+    keys = [k for k in all_keys if os.path.splitext(k)[1].lower() in IMG_EXTS]
     if not keys:
         die(f"no reference images for character {args.name!r}. Add some with `add-refs`.")
+
+    if getattr(args, "captions", False):
+        results = [
+            {"slot": f"[Image{i}]", "key": k, "caption": _sidecar_caption(s3, k)}
+            for i, k in enumerate(keys, start=1)
+        ]
+        if args.json:
+            print(json.dumps(results, indent=2))
+        else:
+            for r in results:
+                print(f"{r['slot']} {os.path.basename(r['key'])}: {r['caption'] or '(no caption)'}")
+        return
 
     if args.presign:
         results = [
@@ -260,6 +288,7 @@ def main() -> int:
     sp.add_argument("name")
     sp.add_argument("--dest", help="Local dir for a download (default: a fresh temp dir).")
     sp.add_argument("--presign", action="store_true", help="Print ordered presigned HTTPS URLs instead of downloading.")
+    sp.add_argument("--captions", action="store_true", help="Print each image's .txt sidecar caption instead of downloading.")
     sp.add_argument("--expires", type=int, default=3600, help="Presign expiry seconds (default 3600).")
     sp.add_argument("--json", action="store_true", help="JSON output.")
     sp.set_defaults(func=cmd_refs)

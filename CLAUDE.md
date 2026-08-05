@@ -47,8 +47,9 @@ xharness/
 │       ├── studio-character/      — [studio-*] character CRUD; profiles + refs in S3 (media/<name>/)
 │       │   ├── SKILL.md
 │       │   ├── templates/profile.md      — blank character bible
-│       │   ├── examples/fred/            — worked example (bible + ref-set doc)
-│       │   └── scripts/character.py      — list/create/show/set-profile/add-refs/refs (uses s3)
+│       │   └── scripts/
+│       │       ├── character.py          — list/create/show/set-profile/add-refs/refs (+captions; uses s3)
+│       │       └── contact_sheet.py      — labeled contact sheet for a character folder (S3 or local)
 │       └── s3/
 │           ├── SKILL.md
 │           └── scripts/

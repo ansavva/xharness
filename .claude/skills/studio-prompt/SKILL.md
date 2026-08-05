@@ -106,6 +106,16 @@ own beat. Keep total to `technical.duration` and give ~3 beats per 8s.
 }
 ```
 
+## Approve before sending, and avoid physique language
+
+- **Show the user the final prompt and get approval before it is rendered.** The
+  render engine (`studio-video`) will not submit a prompt to the model until the
+  user has approved the exact text; author here, then hand off for that gate.
+- **Don't over-describe a character's physique.** Explicit anatomical/physique
+  wording (V-taper, broad shoulders, corded forearms) can trip Seedance's E005
+  content filter for beefcake-idiom characters — let the reference images carry
+  build. See the content-filter note in `studio-video`.
+
 ## Rules the validator enforces (and why)
 
 These come straight from the Seedance prompt guides. `build_prompt.py` warns on
