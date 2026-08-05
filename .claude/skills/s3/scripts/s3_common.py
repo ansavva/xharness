@@ -32,7 +32,7 @@ def die(msg: str) -> "None":
 def media_key(rel_path: str) -> str:
     """Turn a path relative to the media root into a full S3 key.
 
-    e.g. "fred/reference/fred_1.webp" -> "media/fred/reference/fred_1.webp"
+    e.g. "<name>/reference/<name>_1.webp" -> "media/<name>/reference/<name>_1.webp"
     """
     return MEDIA_PREFIX + rel_path.lstrip("/")
 
@@ -81,7 +81,7 @@ _NUM_RE = re.compile(r"(\d+)")
 
 
 def natural_key(s: str):
-    """Sort key so fred_2 < fred_10 (lexical sort would flip them)."""
+    """Sort key so <name>_2 < <name>_10 (lexical sort would flip them)."""
     return [int(t) if t.isdigit() else t.lower() for t in _NUM_RE.split(s)]
 
 

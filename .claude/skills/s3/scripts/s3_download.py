@@ -4,9 +4,9 @@
 # ///
 """List or download objects from the media tree of the xharness-assets bucket.
 
-  uv run .../s3_download.py --folder fred/reference --list
-  uv run .../s3_download.py --folder fred/reference --all --dest /tmp/refs --json
-  uv run .../s3_download.py --folder fred/output clip.mp4 --dest .
+  uv run .../s3_download.py --folder <name>/reference --list
+  uv run .../s3_download.py --folder <name>/reference --all --dest /tmp/refs --json
+  uv run .../s3_download.py --folder <name>/output clip.mp4 --dest .
 
 --list prints the object basenames under media/<folder>/. --all downloads them
 all to --dest; NAME... downloads specific basenames. --json emits machine output
@@ -23,7 +23,7 @@ import s3_common as s3c  # noqa: E402
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--folder", required=True, help="Path under media/ (e.g. fred/reference).")
+    ap.add_argument("--folder", required=True, help="Path under media/ (e.g. <name>/reference).")
     ap.add_argument("names", nargs="*", help="Specific basenames to download (default: see --list/--all).")
     ap.add_argument("--list", action="store_true", help="List basenames under the folder; download nothing.")
     ap.add_argument("--all", action="store_true", help="Download every object under the folder.")

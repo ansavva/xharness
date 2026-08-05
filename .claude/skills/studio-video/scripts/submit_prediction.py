@@ -13,8 +13,8 @@ right before it POSTs, then submits directly to the Replicate HTTP API using
 
   # input.json = the built Replicate `input` object WITHOUT reference_images
   # (e.g. `build_prompt.py prompt.json --emit input` → the .input object)
-  uv run submit_prediction.py --input-file input.json --character fred
-  uv run submit_prediction.py --input-file input.json --character fred --slots 1,2,3,6 --poll
+  uv run submit_prediction.py --input-file input.json --character <name>
+  uv run submit_prediction.py --input-file input.json --character <name> --slots 1,2,3,6 --poll
 
 Prints the created prediction id (and, with --poll, waits for a terminal status
 and prints the output video URL). Reference slots map to [Image1..N] in prompt
@@ -66,7 +66,7 @@ def fresh_presigned_refs(character: str, slots: list[int] | None, expires: int) 
         by_n = {}
         for e in entries:
             base = os.path.basename(e["key"])
-            stem = os.path.splitext(base)[0]  # e.g. fred_3
+            stem = os.path.splitext(base)[0]  # e.g. <name>_3
             n = int(stem.rsplit("_", 1)[-1])
             by_n[n] = e["url"]
         missing = [s for s in slots if s not in by_n]
@@ -91,7 +91,7 @@ def api(method: str, url: str, token: str, body: dict | None = None) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--input-file", required=True, help="JSON file: the Replicate `input` object WITHOUT reference_images.")
-    ap.add_argument("--character", required=True, help="Character whose reference set to presign (e.g. fred).")
+    ap.add_argument("--character", required=True, help="Character whose reference set to presign (e.g. <name>).")
     ap.add_argument("--slots", help="Comma-separated reference numbers to use, e.g. 1,2,3,6 (default: all).")
     ap.add_argument("--expires", type=int, default=3600, help="Presign expiry seconds (default 3600).")
     ap.add_argument("--poll", action="store_true", help="Wait for a terminal status and print the output URL.")

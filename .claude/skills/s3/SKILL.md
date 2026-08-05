@@ -12,7 +12,7 @@ multi-MB videos cheaply. It replaced the Google Drive layer for the
 
 Everything lives in one bucket, **`xharness-assets`**, under a single **`media/`**
 key prefix. Paths passed to these scripts are relative *under* `media/`, e.g.
-`fred/reference`. The bucket and prefix are provisioned by Terraform in
+`<name>/reference`. The bucket and prefix are provisioned by Terraform in
 [`infra/`](../../../infra/README.md).
 
 Bucket / prefix / region are overridable via env: `XHARNESS_S3_BUCKET`
@@ -39,9 +39,9 @@ resolve credentials, run `aws login` again (sessions are short-lived).
 file names:
 
 ```
-s3://xharness-assets/media/fred/reference/fred_1.webp … fred_9.webp   # curated set, passed on every generation
-s3://xharness-assets/media/fred/originals/fred_1.webp …               # full source archive
-s3://xharness-assets/media/fred/output/<clip>.mp4                     # renders
+s3://xharness-assets/media/<name>/reference/<name>_1.webp … <name>_9.webp   # curated set, passed on every generation
+s3://xharness-assets/media/<name>/originals/<name>_1.webp …               # full source archive
+s3://xharness-assets/media/<name>/output/<clip>.mp4                     # renders
 s3://xharness-assets/media/misc/output/<clip>.mp4                     # non-character renders
 ```
 
@@ -61,16 +61,16 @@ run directly.
 S3=.claude/skills/s3/scripts
 
 # List a folder
-uv run $S3/s3_download.py --folder fred/reference --list
+uv run $S3/s3_download.py --folder <name>/reference --list
 
 # Download everything in a folder to a temp dir (JSON map name -> local path)
-uv run $S3/s3_download.py --folder fred/reference --all --dest /tmp/refs --json
+uv run $S3/s3_download.py --folder <name>/reference --all --dest /tmp/refs --json
 
 # Upload files into a folder (created implicitly by the key)
-uv run $S3/s3_upload.py --folder fred/output output/fred/clip.mp4
+uv run $S3/s3_upload.py --folder <name>/output output/<name>/clip.mp4
 
-# Presign every reference image, in fred_1..fred_N order, for Replicate
-uv run $S3/s3_presign.py --folder fred/reference --json
+# Presign every reference image, in <name>_1..<name>_N order, for Replicate
+uv run $S3/s3_presign.py --folder <name>/reference --json
 ```
 
 ## Handing assets to Replicate / Seedance
@@ -86,7 +86,7 @@ for references.
 
 - Uploads overwrite a same-named key; the bucket is **versioned**, so the prior
   revision is retained (mirrors Drive's update-in-place-with-history).
-- `list_prefix` skips zero-byte folder markers and natural-sorts (`fred_2`
-  before `fred_10`).
+- `list_prefix` skips zero-byte folder markers and natural-sorts (`<name>_2`
+  before `<name>_10`).
 - Provisioning, teardown, and the presigned-URL cheatsheet live in
   [`infra/README.md`](../../../infra/README.md).
