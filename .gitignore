@@ -1,0 +1,14 @@
+.DS_Store
+.vscode/
+__pycache__/
+*.pyc
+.claude/settings.local.json
+
+# Secrets — real values only; .env.example is committed
+.env
+# Google OAuth client secrets (Desktop app JSON) + any cached token
+credentials.json
+token.json
+
+# Transcripts and any other generated output
+/output/
